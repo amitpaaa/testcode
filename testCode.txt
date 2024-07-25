@@ -1,0 +1,4 @@
+Map<String, List<HealthCheckSummary>> groupedHealthCheckSummaries = 
+    allHealthCheckSummaries.stream()
+        .collect(Collectors.groupingBy(summary -> 
+            StringUtils.isBlank(summary.getRuleCode()) ? "Unknown" : summary.getRuleCode()));
