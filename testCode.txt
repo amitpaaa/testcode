@@ -1,4 +1,15 @@
-Map<String, List<HealthCheckSummary>> groupedHealthCheckSummaries = 
-    allHealthCheckSummaries.stream()
-        .collect(Collectors.groupingBy(summary -> 
-            StringUtils.isBlank(summary.getRuleCode()) ? "Unknown" : summary.getRuleCode()));
+List<SummaryDetailsDTO> flatDTOs = 
+    groupedDTOs.values().stream()
+        .flatMap(List::stream)
+        .collect(Collectors.toList());
+Pageable pageable = PageRequest.of(summaryRequest.getPageNum() - 1, 
+    summaryRequest.getPageSize(), sort);
+int start = (int) pageable.getOffset();
+int end = Math.min((start + pageable.getPageSize()), flatDTOs.size());
+List<SummaryDetailsDTO> pagedDTOs = flatDTOs.subList(start, end);
+
+groupedDTOs.values().forEach(dtoList -> {
+    if (dtoList.size() > 1) {
+        dtoList.forEach(dto -> dto.setGrouped(true));
+    }
+});
