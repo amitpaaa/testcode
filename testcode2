@@ -1,0 +1,92 @@
+@Override
+public APIResponse<List<SummaryDetailsDTO>> getHealthCheckSummaryDetails(GetSummaryDetailsRequest summaryRequest) {
+    // Step 1: Fetch all records with specification and sorting
+    GenericSpecification<HealthCheckSummary> specification = OperationsUtils.createSpecification(summaryRequest.getFilterCriteria(), null);
+    Sort.Direction direction = Sort.Direction.fromString(summaryRequest.getSortDir());
+    Sort sort = Sort.by(new Order(direction, summaryRequest.getSortBy()));
+    List<HealthCheckSummary> allHealthCheckSummaries = healthCheckSummaryRepository.findAll(specification, sort);
+
+    // Step 2: Group the fetched records by businessCheckGroup
+    Map<String, List<HealthCheckSummary>> groupedHealthCheckSummaries = allHealthCheckSummaries.stream()
+            .collect(Collectors.groupingBy(summary -> 
+                StringUtils.isBlank(summary.getBusinessCheckGroup()) ? "null" : summary.getBusinessCheckGroup()));
+
+    // Step 3: Convert grouped records to DTOs and aggregate within each group
+    List<SummaryDetailsDTO> aggregatedDTOs = new ArrayList<>();
+    for (Map.Entry<String, List<HealthCheckSummary>> entry : groupedHealthCheckSummaries.entrySet()) {
+        String groupKey = entry.getKey();
+        List<HealthCheckSummary> summaries = entry.getValue();
+
+        if (summaries.size() > 1) {
+            // Aggregating within the group using aggregatedDetails function
+            SummaryDetailsDTO aggregatedDTO = aggregatedDetails(summaries);
+            aggregatedDTO.setGrouped(true);
+            aggregatedDTOs.add(aggregatedDTO);
+        } else {
+            // Single record in the group, map directly
+            aggregatedDTOs.addAll(healthCheckSummaryMapper.toDtos(summaries));
+        }
+    }
+
+    // Step 4: Apply pagination to the aggregated DTOs
+    Pageable pageable = PageRequest.of(summaryRequest.getPageNum() - 1, summaryRequest.getPageSize(), sort);
+    int start = (int) pageable.getOffset();
+    int end = Math.min((start + pageable.getPageSize()), aggregatedDTOs.size());
+    List<SummaryDetailsDTO> pagedDTOs = aggregatedDTOs.subList(start, end);
+
+    // Step 5: Creating the response
+    return new APIResponse<>(
+            pagedDTOs, 
+            "Success", 
+            (aggregatedDTOs.size() + pageable.getPageSize() - 1) / pageable.getPageSize(), 
+            pageable.getPageNumber() + 1, 
+            aggregatedDTOs.size(),
+            HttpStatus.OK
+    );
+}
+
+// Function to aggregate details within a group
+private SummaryDetailsDTO aggregatedDetails(List<HealthCheckSummary> summaries) {
+    SummaryDetailsDTO aggregatedDTO = new SummaryDetailsDTO();
+    int totalRecords = 0;
+    int errorRecords = 0;
+    int successRecords = 0;
+
+    for (HealthCheckSummary summary : summaries) {
+        totalRecords += summary.getTotalRecords();
+        errorRecords += summary.getRecordsFailed();
+        successRecords += summary.getRecordsPassed();
+        aggregatedDTO = healthCheckSummaryMapper.toDto(summary); // Assuming this copies relevant fields
+    }
+
+    aggregatedDTO.setTotalRecords(totalRecords);
+    aggregatedDTO.setRecordsFailed(errorRecords);
+    aggregatedDTO.setRecordsPassed(successRecords);
+
+    return aggregatedDTO;
+}
+
+@Override
+public APIResponse<List<AggregatedDTO>> getHealthCheckSummaryDetailsAggregated(GetSummaryDetailsRequest summaryRequest) {
+    // Step 1: Create specification and sorting
+    GenericSpecification<HealthCheckSummary> specification = OperationsUtils.createSpecification(summaryRequest.getFilterCriteria(), null);
+    Sort.Direction direction = Sort.Direction.fromString(summaryRequest.getSortDir());
+    Sort sort = Sort.by(new Order(direction, summaryRequest.getSortBy()));
+
+    // Step 2: Apply pagination directly as this function is for aggregated details only
+    Pageable pageable = PageRequest.of(summaryRequest.getPageNum() - 1, summaryRequest.getPageSize(), sort);
+    Page<HealthCheckSummary> pagedHealthCheckSummaryList = healthCheckSummaryRepository.findAll(specification, pageable);
+
+    // Step 3: Convert paged records to aggregated DTOs
+    List<AggregatedDTO> healthCheckSummaryList = healthCheckSummaryMapper.toAggregatedDtos(pagedHealthCheckSummaryList.getContent());
+
+    // Step 4: Creating the response
+    return new APIResponse<>(
+            healthCheckSummaryList, 
+            "Success", 
+            pagedHealthCheckSummaryList.getTotalPages(), 
+            pagedHealthCheckSummaryList.getNumber() + 1, 
+            healthCheckSummaryList.size(),
+            HttpStatus.OK
+    );
+}
