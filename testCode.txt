@@ -1,69 +1,52 @@
-﻿
+@Test
+    public void testGetHealthCheckSummaryDetails() {
+        // Arrange
+        GetSummaryDetailsRequest summaryDetailsRequest = new GetSummaryDetailsRequest();
+        summaryDetailsRequest.setPageNum(1);
+        summaryDetailsRequest.setPageSize(10);
+        summaryDetailsRequest.setSortBy("execId");
+        summaryDetailsRequest.setSortDir("asc");
+        summaryDetailsRequest.setFilterCriteria(new ArrayList<>());
 
-public APIResponse<List<Summary DetailsDTO>> getHealthCheckSummary Details (GetSummary Details Request summary Request) { GenericSpecification<HealthCheckSummary> specification = OperationsUtils.createSpecification (summaryRequest.getFilterCriteria(), joinMap: null);
-Sort.Direction direction = Sort.Direction.fromString(summaryRequest.getSortDir());
-Sort sort Sort.by (new Order(direction, summaryRequest.getSortBy()));
-List<healthCheckSummary>allHealthCheckSummaries = healthCheckSummary Repository.findAll(specification, sort);
-Map<String, List<HealthCheckSummary>> grouped HealthCheckSummaries =
-allHealthCheckSummaries.stream()
-.collect(Collectors.groupingBy (summary ->
-StringUtils.isBlank (summary.getBusinessCheckGroup()) ? "null" : summary.getBusinessCheckGroup()));
-Map<String, List<SummaryDetailsDTO>> map=healthCheckSummaryList.stream()
-.collect(Collectors.groupingBy(obj -> {
-if (StringUtils.isBlank(obj.getBusinessCheckGroup())) {
-}
-return "null";
-return obj.getBusiness CheckGroup();
-}));
-I
-Pageable pageable
-=
-PageRequest.of (summaryRequest.getPageNum() - 1,
-summaryRequest.getPageSize(), sort);
-Page<HealthCheckSummary> pagedHealthCheckSummaryList = healthCheckSummary Repository.findAll(specification, pageable);
-List<SummaryDetailsDTO> healthCheckSummaryList = healthCheckSummary Mapper.toDtos (pagedHealthCheckSummaryList.getContent());
-I
-List<SummaryDetailsDTO> result = new ArrayList<>();
-for (Map.Entry<String, List<Summary Details DTO>> entry:map.entrySet()) {
-if (entry.getKey() != null && entry.getValue().size() > 1 ) {
-List<SummaryDetailsDTO> value = entry.getValue();
-Number totalRecords = 0;
-Number errorRecords = 0;
-Number successRecords = 0;
-SummaryDetailsDTO summaryDetailsDTO = null;
-for (SummaryDetailsDTO dto: value) {
-}
-summaryDetailsDTO = dto;
-totalRecords = totalRecords.intValue() + dto.getTotalRecords().intValue(); errorRecords = errorRecords.intValue() + dto.getRecordsFailed().intValue(); successRecords = successRecords.intValue() + dto.getRecordsPassed().intValue();if (summaryDetailsDTO!= null) {
-}
-}else{
-summaryDetailsDTO.setTotalRecords (totalRecords); summaryDetailsDTO.setRecords Failed (errorRecords); summaryDetailsDTO.setRecordsPassed (successRecords);
-summaryDetailsDTO.setGrouped(true);
-result.add(summaryDetailsDTO);
-result.addAll(entry.getValue());
-}
-}
-return new APIResponse<>(
-result, "Success",
-pagedHealthCheckSummaryList.getTotalPages(), pagedHealthCheckSummaryList.getNumber() + 1,
-result.size(),
+        HealthCheckSummary healthCheckSummary = new HealthCheckSummary();
+        healthCheckSummary.setBusCheckCode("DQGdemo_data6");
+        healthCheckSummary.setBusCheckGroup("DQGdemo_data6");
 
+        Page<HealthCheckSummary> pagedHealthCheckSummaryList = new PageImpl<>(Collections.singletonList(healthCheckSummary));
+        when(healthCheckSummaryRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(pagedHealthCheckSummaryList);
 
+        SummaryDetailsDTO summaryDetailsDTO = new SummaryDetailsDTO();
+        summaryDetailsDTO.setGrouped(true);
+        summaryDetailsDTO.setBusinessCheckGroup("DQGdemo_data6");
+        summaryDetailsDTO.setTotalRecords(48);
+        summaryDetailsDTO.setRecordsPassed(24);
+        summaryDetailsDTO.setRecordsFailed(24);
 
-﻿
+        SummaryDetailsDTO summaryDetailsDT01 = new SummaryDetailsDTO();
+        summaryDetailsDT01.setGrouped(true);
+        summaryDetailsDT01.setBusinessCheckGroup("DQGdemo_data6");
+        summaryDetailsDT01.setTotalRecords(48);
+        summaryDetailsDT01.setRecordsPassed(24);
+        summaryDetailsDT01.setRecordsFailed(24);
 
-@Override
-public APIResponse<List<AggregatedDTO>> getHealthCheckSummaryDetails Aggregated (GetSummaryDetails Request summaryRequest) { GenericSpecification<HealthCheckSummary> specification OperationsUtils.createSpecification (summaryRequest.getFilterCriteria(), joinMap: null);
-Sort.Direction direction = Sort.Direction.fromString(summaryRequest.getSortDir());
-Sort sort = Sort.by (new Order (direction, summaryRequest.getSortBy()));
-Pageable pageable PageRequest.of (summaryRequest.getPageNum() - 1,
-summaryRequest.getPageSize(), sort);
-Page<HealthCheckSummary> paged HealthCheckSummaryList = healthCheckSummary Repository.findAll(specification, pageable);
-List<AggregatedDTO> healthCheckSummaryList = healthCheckSummaryMapper. toAggregatedDtos (pagedHealthCheckSummary List.getContent());
+        List<SummaryDetailsDTO> dtos = new ArrayList<>();
+        dtos.add(summaryDetailsDTO);
+        dtos.add(summaryDetailsDT01);
+        when(healthCheckSummaryMapper.toDtos(anyList())).thenReturn(dtos);
+
+        // Act
+        APIResponse<List<SummaryDetailsDTO>> apiResponse = processLogServiceImpl.getHealthCheckSummaryDetails(summaryDetailsRequest);
+
+        // Assert
+        assertThat(apiResponse).isNotNull();
+        assertThat(apiResponse.getData()).isNotNull();
+        assertThat(apiResponse.getData()).hasSize(2);
+        assertThat(apiResponse.getData().get(0).getTotalRecords()).isEqualTo(48);
+        assertThat(apiResponse.getData().get(0).getRecordsPassed()).isEqualTo(24);
+        assertThat(apiResponse.getData().get(0).getRecordsFailed()).isEqualTo(24);
+        assertThat(apiResponse.getData().get(1).getTotalRecords()).isEqualTo(48);
+        assertThat(apiResponse.getData().get(1).getRecordsPassed()).isEqualTo(24);
+        assertThat(apiResponse.getData().get(1).getRecordsFailed()).isEqualTo(24);
+        assertThat(apiResponse.getMessage()).isEqualTo("Success");
+    }
 }
-return new APIResponse<>(
-healthCheckSummaryList, "Success",
-pagedHealthCheckSummaryList.getTotalPages (),
-pagedHealthCheckSummary List.getNumber() + 1,
-healthCheckSummaryList.size(),
-HttpStatus.OK);
