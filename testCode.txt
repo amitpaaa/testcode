@@ -1,52 +1,56 @@
 @Test
-    public void testGetHealthCheckSummaryDetails() {
+    void testGetHealthCheckSummaryDetails() {
         // Arrange
-        GetSummaryDetailsRequest summaryDetailsRequest = new GetSummaryDetailsRequest();
-        summaryDetailsRequest.setPageNum(1);
-        summaryDetailsRequest.setPageSize(10);
-        summaryDetailsRequest.setSortBy("execId");
-        summaryDetailsRequest.setSortDir("asc");
-        summaryDetailsRequest.setFilterCriteria(new ArrayList<>());
+        GetSummaryDetailsRequest request = new GetSummaryDetailsRequest();
+        request.setFilterCriteria(new ArrayList<>());
+        request.setSortBy("someField");
+        request.setSortDir("ASC");
+        request.setPageSize(10);
+        request.setPageNum(1);
 
-        HealthCheckSummary healthCheckSummary = new HealthCheckSummary();
-        healthCheckSummary.setBusCheckCode("DQGdemo_data6");
-        healthCheckSummary.setBusCheckGroup("DQGdemo_data6");
+        HealthCheckSummary summary1 = new HealthCheckSummary();
+        summary1.setBusinessCheckGroup("group1");
+        summary1.setTotalRecords(5);
+        summary1.setRecordsFailed(1);
+        summary1.setRecordsPassed(4);
 
-        Page<HealthCheckSummary> pagedHealthCheckSummaryList = new PageImpl<>(Collections.singletonList(healthCheckSummary));
-        when(healthCheckSummaryRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(pagedHealthCheckSummaryList);
+        HealthCheckSummary summary2 = new HealthCheckSummary();
+        summary2.setBusinessCheckGroup("group1");
+        summary2.setTotalRecords(10);
+        summary2.setRecordsFailed(2);
+        summary2.setRecordsPassed(8);
 
-        SummaryDetailsDTO summaryDetailsDTO = new SummaryDetailsDTO();
-        summaryDetailsDTO.setGrouped(true);
-        summaryDetailsDTO.setBusinessCheckGroup("DQGdemo_data6");
-        summaryDetailsDTO.setTotalRecords(48);
-        summaryDetailsDTO.setRecordsPassed(24);
-        summaryDetailsDTO.setRecordsFailed(24);
+        List<HealthCheckSummary> summaries = Arrays.asList(summary1, summary2);
+        when(healthCheckSummaryRepository.findAll(any(), any(Sort.class))).thenReturn(summaries);
 
-        SummaryDetailsDTO summaryDetailsDT01 = new SummaryDetailsDTO();
-        summaryDetailsDT01.setGrouped(true);
-        summaryDetailsDT01.setBusinessCheckGroup("DQGdemo_data6");
-        summaryDetailsDT01.setTotalRecords(48);
-        summaryDetailsDT01.setRecordsPassed(24);
-        summaryDetailsDT01.setRecordsFailed(24);
+        SummaryDetailsDTO dto1 = new SummaryDetailsDTO();
+        dto1.setBusinessCheckGroup("group1");
+        dto1.setTotalRecords(5);
+        dto1.setRecordsFailed(1);
+        dto1.setRecordsPassed(4);
 
-        List<SummaryDetailsDTO> dtos = new ArrayList<>();
-        dtos.add(summaryDetailsDTO);
-        dtos.add(summaryDetailsDT01);
-        when(healthCheckSummaryMapper.toDtos(anyList())).thenReturn(dtos);
+        SummaryDetailsDTO dto2 = new SummaryDetailsDTO();
+        dto2.setBusinessCheckGroup("group1");
+        dto2.setTotalRecords(10);
+        dto2.setRecordsFailed(2);
+        dto2.setRecordsPassed(8);
+
+        when(healthCheckSummaryMapper.toDtos(anyList())).thenReturn(Arrays.asList(dto1, dto2));
 
         // Act
-        APIResponse<List<SummaryDetailsDTO>> apiResponse = processLogServiceImpl.getHealthCheckSummaryDetails(summaryDetailsRequest);
+        APIResponse<List<SummaryDetailsDTO>> response = healthCheckService.getHealthCheckSummaryDetails(request);
 
         // Assert
-        assertThat(apiResponse).isNotNull();
-        assertThat(apiResponse.getData()).isNotNull();
-        assertThat(apiResponse.getData()).hasSize(2);
-        assertThat(apiResponse.getData().get(0).getTotalRecords()).isEqualTo(48);
-        assertThat(apiResponse.getData().get(0).getRecordsPassed()).isEqualTo(24);
-        assertThat(apiResponse.getData().get(0).getRecordsFailed()).isEqualTo(24);
-        assertThat(apiResponse.getData().get(1).getTotalRecords()).isEqualTo(48);
-        assertThat(apiResponse.getData().get(1).getRecordsPassed()).isEqualTo(24);
-        assertThat(apiResponse.getData().get(1).getRecordsFailed()).isEqualTo(24);
-        assertThat(apiResponse.getMessage()).isEqualTo("Success");
+        assertNotNull(response);
+        assertEquals("Success", response.getMessage());
+        assertEquals(HttpStatus.OK, response.getStatus());
+        assertEquals(1, response.getTotalPages());
+        assertEquals(1, response.getPageNum());
+        assertEquals(1, response.getData().size());
+
+        SummaryDetailsDTO resultDto = response.getData().get(0);
+        assertTrue(resultDto.isGrouped());
+        assertEquals(15, resultDto.getTotalRecords());
+        assertEquals(3, resultDto.getRecordsFailed());
+        assertEquals(12, resultDto.getRecordsPassed());
     }
-}
