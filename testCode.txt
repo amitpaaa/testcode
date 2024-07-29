@@ -1,3 +1,6 @@
- <button matSuffix mat-icon-button aria-label="details" (click)="$event.stopPropagation(); showHealthCheckDetails(row)" matTooltip="Health Check Details">
-      <mat-icon>info</mat-icon>
-    </button>
+showHealthCheckDetails(rowData: any): void {
+    this.dialog.open(HealthCheckSummaryPopupComponent, {
+      width: '600px',
+      data: rowData
+    });
+  }
