@@ -1,14 +1,34 @@
-private FilterCriteria transformBaseSearchRequests(List<BaseSearchRequest> baseSearchRequests) {
-    List<Filter> filters = baseSearchRequests.stream()
-        .map(request -> {
-            if ("businessCheckGroup".equals(request.getKey())) {
-                return new Filter("busCheckGroup", request.getValue(), request.getOperation(), request.getDataType());
-            }
-            return new Filter(request.getKey(), request.getValue(), request.getOperation(), request.getDataType());
-        })
-        .collect(Collectors.toList());
+package com.example.filters;
 
-    FilterCriteria filterCriteria = new FilterCriteria();
-    filterCriteria.setFilters(filters);
-    return filterCriteria;
+import java.util.List;
+
+public class FilterCriteria {
+    private List<Filter> filters;
+    private int pageNum;
+    private int pageSize;
+
+    // Getters and Setters
+    public List<Filter> getFilters() {
+        return filters;
+    }
+
+    public void setFilters(List<Filter> filters) {
+        this.filters = filters;
+    }
+
+    public int getPageNum() {
+        return pageNum;
+    }
+
+    public void setPageNum(int pageNum) {
+        this.pageNum = pageNum;
+    }
+
+    public int getPageSize() {
+        return pageSize;
+    }
+
+    public void setPageSize(int pageSize) {
+        this.pageSize = pageSize;
+    }
 }
