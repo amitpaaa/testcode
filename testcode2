@@ -1,63 +1,18 @@
-@Override
-public APIResponse<List<SummaryDetailsDTO>> getHealthCheckSummaryDetails(GetSummaryDetailsRequest summaryRequest) {
-    // Transform the filter criteria to use busCheckGroup instead of businessCheckGroup
-    FilterCriteria transformedFilterCriteria = transformFilterCriteria(summaryRequest.getFilterCriteria());
+ FilterCriteria filterCriteria = summaryRequest.getFilterCriteria();
 
-    // Create specification using the transformed filter criteria
-    GenericSpecification<HealthCheckSummary> specification = OperationsUtils.createSpecification(transformedFilterCriteria, null);
-
-    // Define sorting direction and sort criteria
-    Sort.Direction direction = Sort.Direction.fromString(summaryRequest.getSortDir());
-    Sort sort = Sort.by(new Order(direction, summaryRequest.getSortBy()));
-
-    // Query the repository with the specification and sorting
-    List<HealthCheckSummary> allHealthCheckSummaries = healthCheckSummaryRepository.findAll(specification, sort);
-
-    // Group and transform the results
-    Map<String, List<HealthCheckSummary>> groupedHealthCheckSummaries = allHealthCheckSummaries.stream()
-        .collect(Collectors.groupingBy(summary ->
-            StringUtils.isBlank(summary.getBusCheckGroup()) ? "null" : summary.getBusCheckGroup()));
-
-    Map<String, List<SummaryDetailsDTO>> map = groupedHealthCheckSummaries.entrySet().stream()
-        .collect(Collectors.toMap(Map.Entry::getKey, entry -> healthCheckSummaryMapper.toDtos(entry.getValue())));
-
-    List<SummaryDetailsDTO> result = new ArrayList<>();
-    for (Map.Entry<String, List<SummaryDetailsDTO>> entry : map.entrySet()) {
-        if (entry.getKey() != null && entry.getValue().size() > 1) {
-            List<SummaryDetailsDTO> value = entry.getValue();
-            Number totalRecords = 0;
-            Number errorRecords = 0;
-            Number successRecords = 0;
-            SummaryDetailsDTO summaryDetailsDTO = null;
-            for (SummaryDetailsDTO dto : value) {
-                summaryDetailsDTO = dto;
-                totalRecords = totalRecords.intValue() + dto.getTotalRecords().intValue();
-                errorRecords = errorRecords.intValue() + dto.getRecordsFailed().intValue();
-                successRecords = successRecords.intValue() + dto.getRecordsPassed().intValue();
-            }
-            // Update result list if necessary
-        }
-    }
-
-    // Return the API response with the result
-    return new APIResponse<>(result);
-}
-
-private FilterCriteria transformFilterCriteria(FilterCriteria filterCriteria) {
+    // Transform filter criteria
     List<Filter> transformedFilters = filterCriteria.getFilters().stream()
-        .map(this::transformFilter)
+        .map(filter -> {
+            if ("businessCheckGroup".equals(filter.getKey())) {
+                // Replace businessCheckGroup with busCheckGroup
+                return new Filter("busCheckGroup", filter.getValue(), filter.getOperation(), filter.getDataType());
+            }
+            return filter;
+        })
         .collect(Collectors.toList());
 
-    FilterCriteria transformedFilterCriteria = new FilterCriteria();
-    transformedFilterCriteria.setFilters(transformedFilters);
-    transformedFilterCriteria.setPageNum(filterCriteria.getPageNum());
-    transformedFilterCriteria.setPageSize(filterCriteria.getPageSize());
-    return transformedFilterCriteria;
-}
+    // Update filter criteria with transformed filters
+    filterCriteria.setFilters(transformedFilters);
 
-private Filter transformFilter(Filter filter) {
-    if ("businessCheckGroup".equals(filter.getKey())) {
-        return new Filter("busCheckGroup", filter.getValue(), filter.getOperation(), filter.getDataType());
-    }
-    return filter;
-}
+    // Create specification using the transformed filter criteria
+    GenericSpecification<HealthCheckSummary> specification = OperationsUtils.createSpecification(filterCriteria, null);
