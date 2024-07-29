@@ -1,0 +1,42 @@
+<h2 mat-dialog-title>Health Check Details</h2>
+<mat-dialog-content>
+  <table>
+    <thead>
+      <tr>
+        <th>Rule Code</th>
+        <th>Field Name</th>
+        <th>Principal Amount Field</th>
+        <th>usd_balance_amount</th>
+        <th>Rule Version</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let detail of details">
+        <td>{{ detail.ruleCode }}</td>
+        <td>{{ detail.fieldName }}</td>
+        <td>{{ detail.principalAmountField }}</td>
+        <td>{{ detail.usdBalanceAmount }}</td>
+        <td>{{ detail.ruleVersion }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Unique Data Details</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Unique Key</th>
+        <th>Principal Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let uniqueDetail of details.uniqueDataDetails">
+        <td>{{ uniqueDetail.uniqueKey }}</td>
+        <td>{{ uniqueDetail.principalAmount }}</td>
+      </tr>
+    </tbody>
+  </table>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="onClose()">Close</button>
+</mat-dialog-actions>
