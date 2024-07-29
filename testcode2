@@ -1,17 +1,14 @@
- Map<String, Object> filters = summaryRequest.getFilterCriteria().getFilters();
+private FilterCriteria transformBaseSearchRequests(List<BaseSearchRequest> baseSearchRequests) {
+    List<Filter> filters = baseSearchRequests.stream()
+        .map(request -> {
+            if ("businessCheckGroup".equals(request.getKey())) {
+                return new Filter("busCheckGroup", request.getValue(), request.getOperation(), request.getDataType());
+            }
+            return new Filter(request.getKey(), request.getValue(), request.getOperation(), request.getDataType());
+        })
+        .collect(Collectors.toList());
 
-    // Transform filter criteria from businessCheckGroup to busCheckGroup
-    Map<String, Object> transformedFilters = filters.entrySet().stream()
-        .collect(Collectors.toMap(
-            entry -> "businessCheckGroup".equals(entry.getKey()) ? "busCheckGroup" : entry.getKey(),
-            Map.Entry::getValue
-        ));
-
-    // Create a new FilterCriteria object with transformed filters
-    FilterCriteria transformedFilterCriteria = new FilterCriteria();
-    transformedFilterCriteria.setFilters(transformedFilters);
-    transformedFilterCriteria.setPageNum(summaryRequest.getFilterCriteria().getPageNum());
-    transformedFilterCriteria.setPageSize(summaryRequest.getFilterCriteria().getPageSize());
-
-    // Create specification using the transformed filter criteria
-    GenericSpecification<HealthCheckSummary> specification = OperationsUtils.createSpecification(transformedFilterCriteria, null);
+    FilterCriteria filterCriteria = new FilterCriteria();
+    filterCriteria.setFilters(filters);
+    return filterCriteria;
+}
