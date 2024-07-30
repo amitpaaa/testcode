@@ -4,19 +4,20 @@
     <h3 class="page-header">Health Check Details</h3>
   </div>
   <div class="p-1">
-    <div>
+    <!-- Flexbox container for labels and values -->
+    <div class="details-row">
       <label><strong>Rule Code:</strong></label> {{ data.ruleCode }}
-    </div>
-    <div>
       <label><strong>Field Name:</strong></label> {{ data.fieldName }}
+      <label><strong>Principal Amount Field:</strong></label> {{ data.principalAmountField }}
+      <label><strong>Rule Version:</strong></label> {{ data.ruleGroupVerNum }}
     </div>
-    <app-data-grid [dataSource]="dataSource" [wfTableColumns]="columnDefs" [pageSize]="pageSize" (searchCriteria)="search($event)"></app-data-grid>
+    <app-data-grid [dataSource]="dataSource" [pagination]="false" [wfTableColumns]="columnDefs"></app-data-grid>
   </div>
   <div>
-    <h3 class="page-header">Unique Data Details</h3>
+    <h4 class="unique-header">Unique Data Details</h4>
   </div>
   <div class="p-1">
-    <app-data-grid [dataSource]="uniqueKeyDataSource" [wfTableColumns]="uniqueKeyColumnDefs" [pageSize]="pageSize"></app-data-grid>
+    <app-data-grid [dataSource]="uniqueKeyDataSource" [pagination]="false" [wfTableColumns]="uniqueKeyColumnDefs"></app-data-grid>
   </div>
   <button (click)="onClose()">Close</button>
 </div>
