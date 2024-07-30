@@ -1,14 +1,25 @@
-loadMockData() {
-    // Mock data is already set as this.dataSource
-    this.loadUniqueKeyData(this.dataSource.data[0].uniqueKeyData);
-  }
 
-  loadUniqueKeyData(uniqueKeyData): void {
-    this.uniqueKeyDataSource = {
-      data: uniqueKeyData,
-      totalRecords: uniqueKeyData.length,
-      currentPage: 1,
-      totalPages: 1,
-      message: 'Success'
-    };
+  ruleCode: string;
+  fieldName: string;
+  principalAmountField: string;
+  ruleGroupVerNum: number;
+
+  constructor(public dialogRef: MatDialogRef<HealthCheckDetailsPopupComponent>, @Inject(MAT_DIALOG_DATA) public data: any) { }
+
+  ngOnInit(): void {
+    if (this.dataSource && this.dataSource.data.length > 0) {
+      const firstRecord = this.dataSource.data[0];
+      this.ruleCode = firstRecord.ruleCode;
+      this.fieldName = firstRecord.fieldName;
+      this.principalAmountField = firstRecord.principalAmountField;
+      this.ruleGroupVerNum = firstRecord.ruleGroupVerNum;
+
+      this.uniqueKeyDataSource = {
+        data: firstRecord.uniqueKeyData,
+        totalRecords: firstRecord.uniqueKeyData.length,
+        currentPage: 1,
+        totalPages: 1,
+        message: 'Success'
+      };
+    }
   }
