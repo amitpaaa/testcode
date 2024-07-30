@@ -1,5 +1,3 @@
-import { Component, Inject, OnInit } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-check-details',
@@ -8,22 +6,22 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 })
 export class CheckDetailsComponent implements OnInit {
   columnDefs: DataGridColumns[] = [
-    { name: 'Check Code', id: 'businessCheckCode', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
-    { name: 'Check Version', id: 'ruleVersion', width: 100, isActive: true, type: FieldType.Number, filterType: FilterType.Number },
+    { name: 'Health Check Code', id: 'healthCheckCode', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
+    { name: 'Health Check Ty', id: 'healthCheckType', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
     { name: 'Column Name', id: 'columnName', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
-    { name: 'Severity', id: 'severity', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
-    { name: 'Total Records', id: 'totalRecords', width: 100, isActive: true, type: FieldType.Number, filterType: FilterType.Number },
-    { name: 'Error Records', id: 'recordsFailed', width: 100, isActive: true, type: FieldType.Number, filterType: FilterType.Number },
-    { name: 'Total Principal Amount', id: 'totalPrincipalAmt', width: 100, isActive: true, type: FieldType.Currency, filterType: FilterType.Number },
-    { name: 'Error Principal Amount', id: 'errorPrincipalAmt', width: 100, isActive: true, type: FieldType.Currency, filterType: FilterType.Number },
-    { name: 'Summary Aggregate Expression', id: 'summaryAggExp', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
-    { name: 'Summary Aggregate Exp Value', id: 'summaryAggExpVal', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
+    { name: 'Expression', id: 'expression', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
+    { name: 'Rule Effective Da', id: 'ruleEffectiveDate', width: 100, isActive: true, type: FieldType.Date, filterType: FilterType.Date },
+    { name: 'Principal Amount', id: 'principalAmount', width: 100, isActive: true, type: FieldType.Currency, filterType: FilterType.Number },
+    { name: 'Error Principal Amount', id: 'errorPrincipalAmount', width: 100, isActive: true, type: FieldType.Currency, filterType: FilterType.Number },
+    { name: 'Status', id: 'status', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
+    { name: 'Sequence', id: 'sequence', width: 100, isActive: true, type: FieldType.Number, filterType: FilterType.Number },
+    { name: 'Operator', id: 'operator', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text }
   ];
 
   dataSource: PagingResponse<SummaryDetailsGrouped>;
   pageSize: number = 5;
   defaultPageNum: number = 1;
-  defaultSortBy: string = 'severity';
+  defaultSortBy: string = 'healthCheckCode';
   defaultSortDir: string = SortDir.Asc;
   defaultFilter: FilterCriteria[];
   defaultRequest: SearchRequest;
