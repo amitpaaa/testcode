@@ -1,3 +1,68 @@
- <a (click)="$event.stopPropagation(); showHealthCheckDetails(row)" matTooltip="Health Check Details" style="cursor: pointer; text-decoration: underline; color: blue;">
-      Details
-    </a>
+import { Component, Inject, OnInit } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+
+@Component({
+  selector: 'app-check-details',
+  templateUrl: './check-details.component.html',
+  styleUrls: ['./check-details.component.scss']
+})
+export class CheckDetailsComponent implements OnInit {
+  columnDefs: DataGridColumns[] = [
+    { name: 'Check Code', id: 'businessCheckCode', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
+    { name: 'Check Version', id: 'ruleVersion', width: 100, isActive: true, type: FieldType.Number, filterType: FilterType.Number },
+    { name: 'Column Name', id: 'columnName', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
+    { name: 'Severity', id: 'severity', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
+    { name: 'Total Records', id: 'totalRecords', width: 100, isActive: true, type: FieldType.Number, filterType: FilterType.Number },
+    { name: 'Error Records', id: 'recordsFailed', width: 100, isActive: true, type: FieldType.Number, filterType: FilterType.Number },
+    { name: 'Total Principal Amount', id: 'totalPrincipalAmt', width: 100, isActive: true, type: FieldType.Currency, filterType: FilterType.Number },
+    { name: 'Error Principal Amount', id: 'errorPrincipalAmt', width: 100, isActive: true, type: FieldType.Currency, filterType: FilterType.Number },
+    { name: 'Summary Aggregate Expression', id: 'summaryAggExp', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
+    { name: 'Summary Aggregate Exp Value', id: 'summaryAggExpVal', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
+  ];
+
+  dataSource: PagingResponse<SummaryDetailsGrouped>;
+  pageSize: number = 5;
+  defaultPageNum: number = 1;
+  defaultSortBy: string = 'severity';
+  defaultSortDir: string = SortDir.Asc;
+  defaultFilter: FilterCriteria[];
+  defaultRequest: SearchRequest;
+
+  constructor(
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    public dialogRef: MatDialogRef<CheckDetailsComponent>,
+    private healthcheckService: HealthcheckService
+  ) { }
+
+  ngOnInit(): void {
+    this.defaultFilter = [
+      { key: 'execId', value: this.data.execId, operation: Operation.Equals, dataType: DataType.String },
+      { key: 'businessCheckGroup', value: this.data.businessCheckGroup, operation: Operation.Equals, dataType: DataType.String }
+    ];
+    this.defaultRequest = {
+      filterCriteria: this.defaultFilter,
+      pageNum: this.defaultPageNum,
+      pageSize: this.pageSize,
+      sortBy: this.defaultSortBy,
+      sortDir: this.defaultSortDir
+    };
+    this.search(this.defaultRequest);
+  }
+
+  search(event: SearchRequest): void {
+    let defaultFilter = this.defaultFilter?.filter(x => event.filterCriteria?.map(e => e.key)?.filter(y => y == x.key).length === 0);
+    event.filterCriteria = event.filterCriteria.concat(defaultFilter ?? []);
+    event.filterCriteria = event.filterCriteria.length === 0 ? this.defaultFilter : event.filterCriteria;
+    event.filterCriteria = event.filterCriteria.filter(x => x.value);
+    event.sortBy = event.sortBy || this.defaultSortBy;
+    event.sortDir = event.sortDir || this.defaultSortDir;
+    this.pageSize = event.pageSize;
+    this.healthcheckService.getAggregatedSummaryDetails(event).subscribe((response) => {
+      this.dataSource = response;
+    });
+  }
+
+  onClose(): void {
+    this.dialogRef.close();
+  }
+}
