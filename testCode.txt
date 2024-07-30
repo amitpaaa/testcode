@@ -1,23 +1,8 @@
-<div class="full-width-panel">
-  <mat-icon class="close" (click)="onClose()" svgIcon="WF_icon_close-x"></mat-icon>
-  <div>
-    <h3 class="page-header">Health Check Details</h3>
-  </div>
-  <div class="p-1">
-    <!-- Flexbox container for labels and values -->
-    <div class="details-row">
-      <label><strong>Rule Code:</strong></label> {{ data.ruleCode }}
-      <label><strong>Field Name:</strong></label> {{ data.fieldName }}
-      <label><strong>Principal Amount Field:</strong></label> {{ data.principalAmountField }}
-      <label><strong>Rule Version:</strong></label> {{ data.ruleGroupVerNum }}
-    </div>
-    <app-data-grid [dataSource]="dataSource" [pagination]="false" [wfTableColumns]="columnDefs"></app-data-grid>
-  </div>
-  <div>
-    <h4 class="unique-header">Unique Data Details</h4>
-  </div>
-  <div class="p-1">
-    <app-data-grid [dataSource]="uniqueKeyDataSource" [pagination]="false" [wfTableColumns]="uniqueKeyColumnDefs"></app-data-grid>
-  </div>
-  <button (click)="onClose()">Close</button>
-</div>
+.unique-header {
+  font-size: 1.2rem;
+  color: black;
+  border-bottom: 2px solid black;
+  padding-bottom: 0.2rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
