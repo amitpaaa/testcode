@@ -1,66 +1,22 @@
-
-@Component({
-  selector: 'app-check-details',
-  templateUrl: './check-details.component.html',
-  styleUrls: ['./check-details.component.scss']
-})
-export class CheckDetailsComponent implements OnInit {
-  columnDefs: DataGridColumns[] = [
-    { name: 'Health Check Code', id: 'healthCheckCode', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
-    { name: 'Health Check Ty', id: 'healthCheckType', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
-    { name: 'Column Name', id: 'columnName', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
-    { name: 'Expression', id: 'expression', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
-    { name: 'Rule Effective Da', id: 'ruleEffectiveDate', width: 100, isActive: true, type: FieldType.Date, filterType: FilterType.Date },
-    { name: 'Principal Amount', id: 'principalAmount', width: 100, isActive: true, type: FieldType.Currency, filterType: FilterType.Number },
-    { name: 'Error Principal Amount', id: 'errorPrincipalAmount', width: 100, isActive: true, type: FieldType.Currency, filterType: FilterType.Number },
-    { name: 'Status', id: 'status', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text },
-    { name: 'Sequence', id: 'sequence', width: 100, isActive: true, type: FieldType.Number, filterType: FilterType.Number },
-    { name: 'Operator', id: 'operator', width: 100, isActive: true, type: FieldType.Text, filterType: FilterType.Text }
-  ];
-
-  dataSource: PagingResponse<SummaryDetailsGrouped>;
-  pageSize: number = 5;
-  defaultPageNum: number = 1;
-  defaultSortBy: string = 'healthCheckCode';
-  defaultSortDir: string = SortDir.Asc;
-  defaultFilter: FilterCriteria[];
-  defaultRequest: SearchRequest;
-
-  constructor(
-    @Inject(MAT_DIALOG_DATA) public data: any,
-    public dialogRef: MatDialogRef<CheckDetailsComponent>,
-    private healthcheckService: HealthcheckService
-  ) { }
-
-  ngOnInit(): void {
-    this.defaultFilter = [
-      { key: 'execId', value: this.data.execId, operation: Operation.Equals, dataType: DataType.String },
-      { key: 'businessCheckGroup', value: this.data.businessCheckGroup, operation: Operation.Equals, dataType: DataType.String }
-    ];
-    this.defaultRequest = {
-      filterCriteria: this.defaultFilter,
-      pageNum: this.defaultPageNum,
-      pageSize: this.pageSize,
-      sortBy: this.defaultSortBy,
-      sortDir: this.defaultSortDir
-    };
-    this.search(this.defaultRequest);
-  }
-
-  search(event: SearchRequest): void {
-    let defaultFilter = this.defaultFilter?.filter(x => event.filterCriteria?.map(e => e.key)?.filter(y => y == x.key).length === 0);
-    event.filterCriteria = event.filterCriteria.concat(defaultFilter ?? []);
-    event.filterCriteria = event.filterCriteria.length === 0 ? this.defaultFilter : event.filterCriteria;
-    event.filterCriteria = event.filterCriteria.filter(x => x.value);
-    event.sortBy = event.sortBy || this.defaultSortBy;
-    event.sortDir = event.sortDir || this.defaultSortDir;
-    this.pageSize = event.pageSize;
-    this.healthcheckService.getAggregatedSummaryDetails(event).subscribe((response) => {
-      this.dataSource = response;
-    });
-  }
-
-  onClose(): void {
-    this.dialogRef.close();
-  }
-}
+<div class="full-width-panel">
+  <mat-icon class="close" (click)="onClose()" svgIcon="WF_icon_close-x"></mat-icon>
+  <div>
+    <h3 class="page-header">Health Check Details</h3>
+  </div>
+  <div class="p-1">
+    <div>
+      <label><strong>Rule Code:</strong></label> {{ data.ruleCode }}
+    </div>
+    <div>
+      <label><strong>Field Name:</strong></label> {{ data.fieldName }}
+    </div>
+    <app-data-grid [dataSource]="dataSource" [wfTableColumns]="columnDefs" [pageSize]="pageSize" (searchCriteria)="search($event)"></app-data-grid>
+  </div>
+  <div>
+    <h3 class="page-header">Unique Data Details</h3>
+  </div>
+  <div class="p-1">
+    <app-data-grid [dataSource]="uniqueKeyDataSource" [wfTableColumns]="uniqueKeyColumnDefs" [pageSize]="pageSize"></app-data-grid>
+  </div>
+  <button (click)="onClose()">Close</button>
+</div>
