@@ -1,6 +1,3 @@
-showHealthCheckDetails(rowData: any): void {
-    this.dialog.open(HealthCheckSummaryPopupComponent, {
-      width: '600px',
-      data: rowData
-    });
-  }
+ <a (click)="$event.stopPropagation(); showHealthCheckDetails(row)" matTooltip="Health Check Details" style="cursor: pointer; text-decoration: underline; color: blue;">
+      Details
+    </a>
