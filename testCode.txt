@@ -1,6 +1,14 @@
-uniqueKeyData: [
-        { uniqueKey: '1MBFG~1051', principalAmount: 75 },
-        { uniqueKey: '233525702', principalAmount: 200 },
-        { uniqueKey: '1MBFG~1046', principalAmount: 100 },
-        { uniqueKey: '23911681', principalAmount: 25 }
-      ]
+ loadMockData() {
+    // Mock data is already set as this.dataSource
+    this.loadUniqueKeyData(this.dataSource.data[0]);
+  }
+
+  loadUniqueKeyData(rowData): void {
+    this.uniqueKeyDataSource = {
+      data: rowData.uniqueKeyData,
+      totalRecords: rowData.uniqueKeyData.length,
+      currentPage: 1,
+      totalPages: 1,
+      message: 'Success'
+    };
+  }
