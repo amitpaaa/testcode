@@ -1,45 +1,6 @@
-import { PagingResponse } from 'src/app/shared/models/grid-interfaces.model';
-
-export const MOCK_HEALTH_CHECK_DETAILS: PagingResponse<any> = {
-  data: [
-    {
-      businessCheckCode: 'BCC.1639449528.77882.6',
-      columnName: 'F_INTERNAL_CUST_IND',
-      expression: 'F_INTERNAL_CUST_IND IS NOT NULL',
-      ruleEffectiveDate: '2024-01-05',
-      principalAmount: 5000,
-      errorPrincipalAmount: 400,
-      status: 'Pass',
-      sequence: 1,
-      operator: 'And'
-    },
-    {
-      businessCheckCode: 'BCC.1639449528.77882.5',
-      columnName: 'V_PROD_RISK_RATING_CO',
-      expression: "V_PROD_RISK_RATING_CODE IN ('0','1','2')",
-      ruleEffectiveDate: '2024-05-30',
-      principalAmount: 5500,
-      errorPrincipalAmount: 100,
-      status: 'Pass',
-      sequence: 2,
-      operator: 'And'
-    }
-  ],
-  totalRecords: 20,
-  currentPage: 1,
-  totalPages: 3,
-  message: 'Success'
-};
-
-export const MOCK_UNIQUE_DATA_DETAILS: PagingResponse<any> = {
-  data: [
-    { uniqueKey: '1MBFG~1051', principalAmount: 75 },
-    { uniqueKey: '233525702', principalAmount: 200 },
-    { uniqueKey: '1MBFG~1046', principalAmount: 100 },
-    { uniqueKey: '23911681', principalAmount: 25 }
-  ],
-  totalRecords: 4,
-  currentPage: 1,
-  totalPages: 1,
-  message: 'Success'
-};
+uniqueKeyData: [
+        { uniqueKey: '1MBFG~1051', principalAmount: 75 },
+        { uniqueKey: '233525702', principalAmount: 200 },
+        { uniqueKey: '1MBFG~1046', principalAmount: 100 },
+        { uniqueKey: '23911681', principalAmount: 25 }
+      ]
