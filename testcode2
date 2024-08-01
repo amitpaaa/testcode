@@ -1,34 +1,6 @@
-package com.example.filters;
-
-import java.util.List;
-
-public class FilterCriteria {
-    private List<Filter> filters;
-    private int pageNum;
-    private int pageSize;
-
-    // Getters and Setters
-    public List<Filter> getFilters() {
-        return filters;
-    }
-
-    public void setFilters(List<Filter> filters) {
-        this.filters = filters;
-    }
-
-    public int getPageNum() {
-        return pageNum;
-    }
-
-    public void setPageNum(int pageNum) {
-        this.pageNum = pageNum;
-    }
-
-    public int getPageSize() {
-        return pageSize;
-    }
-
-    public void setPageSize(int pageSize) {
-        this.pageSize = pageSize;
-    }
-}
+<mat-icon 
+        class="mat-icon notranslate mat-secondary material-icons mat-ligature-font mat-icon-no-color" 
+        (click)="$event.stopPropagation(); showHealthCheckDetails(row)"
+        matTooltip="Health Check Details">
+        menu
+      </mat-icon>
