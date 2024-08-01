@@ -1,6 +1,3 @@
-<mat-icon 
-        class="mat-icon notranslate mat-secondary material-icons mat-ligature-font mat-icon-no-color" 
-        (click)="$event.stopPropagation(); showHealthCheckDetails(row)"
-        matTooltip="Health Check Details">
-        menu
-      </mat-icon>
+UPDATE [FINANCE_OPERATIONS_DB].execution_status.health_check_summary
+SET v_dq_group_check_description = 'Dummy description 1'
+WHERE v_exec_id = 'local-1718185021092' AND businesscheckgroup = 'group1';
