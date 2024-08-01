@@ -1,34 +1,50 @@
  @Test
-    public void testGetHealthCheckSummaryDetails_WithFilterCriteria() {
+    public void testGetHealthCheckSummaryDetails_GroupingAndSumming() {
         GetSummaryDetailsRequest request = new GetSummaryDetailsRequest();
-        request.setFilterCriteria(new FilterCriteria("busCheckGroup", "group1", "EQUALS"));
         request.setPageSize(10);
         request.setPageNum(0);
 
-        HealthCheckSummary summary = new HealthCheckSummary();
-        summary.setBusCheckGroup("group1");
-        summary.setTotalRecords(5);
-        summary.setRecordsFailed(1);
-        summary.setRecordsPassed(4);
+        HealthCheckSummary summary1 = new HealthCheckSummary();
+        summary1.setBusCheckGroup("group1");
+        summary1.setTotalRecords(5);
+        summary1.setRecordsFailed(1);
+        summary1.setRecordsPassed(4);
 
-        List<HealthCheckSummary> summaries = Arrays.asList(summary);
+        HealthCheckSummary summary2 = new HealthCheckSummary();
+        summary2.setBusCheckGroup("group1");
+        summary2.setTotalRecords(10);
+        summary2.setRecordsFailed(2);
+        summary2.setRecordsPassed(8);
+
+        List<HealthCheckSummary> summaries = Arrays.asList(summary1, summary2);
         when(healthCheckSummaryRepository.findAll(any(GenericSpecification.class))).thenReturn(summaries);
 
-        SummaryDetailsDTO dto = new SummaryDetailsDTO();
-        dto.setBusCheckGroup("group1");
-        dto.setTotalRecords(5);
-        dto.setRecordsFailed(1);
-        dto.setRecordsPassed(4);
+        SummaryDetailsDTO dto1 = new SummaryDetailsDTO();
+        dto1.setBusCheckGroup("group1");
+        dto1.setTotalRecords(5);
+        dto1.setRecordsFailed(1);
+        dto1.setRecordsPassed(4);
 
-        when(healthCheckSummaryMapper.toDtos(any())).thenReturn(Arrays.asList(dto));
+        SummaryDetailsDTO dto2 = new SummaryDetailsDTO();
+        dto2.setBusCheckGroup("group1");
+        dto2.setTotalRecords(10);
+        dto2.setRecordsFailed(2);
+        dto2.setRecordsPassed(8);
+
+        when(healthCheckSummaryMapper.toDtos(any())).thenReturn(Arrays.asList(dto1, dto2));
 
         APIResponse<List<SummaryDetailsDTO>> response = healthCheckSummaryService.getHealthCheckSummaryDetails(request);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatus());
         assertEquals("Success", response.getMessage());
-        assertEquals(1, response.getData().size());
         assertEquals(1, response.getTotalPages());
         assertEquals(1, response.getPageNum());
         assertEquals(1, response.getTotalSize());
+
+        SummaryDetailsDTO resultDto = response.getData().get(0);
+        assertTrue(resultDto.isGrouped());
+        assertEquals(15, resultDto.getTotalRecords().intValue());
+        assertEquals(3, resultDto.getRecordsFailed().intValue());
+        assertEquals(12, resultDto.getRecordsPassed().intValue());
     }
