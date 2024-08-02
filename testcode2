@@ -1,40 +1,6 @@
-  public APIResponse<List<AggregatedDTO>> getHealthCheckSummaryDetailsAggregated(GetSummaryDetailsRequest summaryRequest) {
-    // Use Optional to handle null checks and provide defaults
-    List<BaseSearchRequest> list = Optional.ofNullable(summaryRequest)
-            .map(GetSummaryDetailsRequest::getFilterCriteria)
-            .orElse(Collections.emptyList());
+ Integer pageNum = summaryRequest != null ? summaryRequest.getPageNum() : null;
+    Integer pageSize = summaryRequest != null ? summaryRequest.getPageSize() : null;
 
-    list.forEach(criteria -> {
-        if ("businessCheckGroup".equals(criteria.getKey())) {
-            criteria.setKey("busCheckGroup");
-        }
-    });
-
-    GenericSpecification<HealthCheckSummary> specification = OperationsUtils.createSpecification(list, null);
-
-    Sort.Direction direction = Optional.ofNullable(summaryRequest)
-            .map(GetSummaryDetailsRequest::getSortDir)
-            .map(Sort.Direction::fromString)
-            .orElse(Sort.Direction.ASC);
-
-    String sortBy = Optional.ofNullable(summaryRequest)
-            .map(GetSummaryDetailsRequest::getSortBy)
-            .orElse("defaultSortField");
-
-    int pageNum = Optional.ofNullable(summaryRequest)
-            .map(GetSummaryDetailsRequest::getPageNum)
-            .orElse(1) - 1;
-
-    int pageSize = Optional.ofNullable(summaryRequest)
-            .map(GetSummaryDetailsRequest::getPageSize)
-            .orElse(10);
-
-    Sort sort = Sort.by(new Sort.Order(direction, sortBy));
-    Pageable pageable = PageRequest.of(pageNum, pageSize, sort);
-
-    Page<HealthCheckSummary> pagedHealthCheckSummaryList = healthCheckSummaryRepository.findAll(specification, pageable);
-
-    List<AggregatedDTO> healthCheckSummaryList = healthCheckSummaryMapper.toAggregatedDtos(pagedHealthCheckSummaryList.getContent());
-
-    return new APIResponse<>(healthCheckSummaryList);
-}
+    Pageable pageable = PageRequest.of(pageNum != null ? pageNum - 1 : 0, 
+                                       pageSize != null ? pageSize : 10, 
+                                       sort);
