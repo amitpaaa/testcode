@@ -1,45 +1,7 @@
- @Test
-    public void testGetHealthCheckSummaryDetails_NormalOperation() {
-        // Arrange
-        GetSummaryDetailsRequest summaryRequest = new GetSummaryDetailsRequest();
-        summaryRequest.setPageSize(10);
-        summaryRequest.setPageNum(0);
-        summaryRequest.setSortBy("busCheckGroup");
-        summaryRequest.setSortDir("asc");
-
-        HealthCheckSummary summary1 = new HealthCheckSummary();
-        summary1.setBusCheckGroup("group1");
-        HealthCheckSummary summary2 = new HealthCheckSummary();
-        summary2.setBusCheckGroup("group1");
-
-        List<HealthCheckSummary> summaries = Arrays.asList(summary1, summary2);
-
-        when(healthCheckSummaryRepository.findAll(any(GenericSpecification.class))).thenReturn(summaries);
-
-        SummaryDetailsDTO dto1 = new SummaryDetailsDTO();
-        dto1.setTotalRecords(5);
-        dto1.setRecordsFailed(1);
-        dto1.setRecordsPassed(4);
-
-        SummaryDetailsDTO dto2 = new SummaryDetailsDTO();
-        dto2.setTotalRecords(3);
-        dto2.setRecordsFailed(0);
-        dto2.setRecordsPassed(3);
-
-        when(healthCheckSummaryMapper.toDtos(anyList())).thenReturn(Arrays.asList(dto1, dto2));
-
-        // Act
-        APIResponse<List<SummaryDetailsDTO>> response = processLogServiceImpl.getHealthCheckSummaryDetails(summaryRequest);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals("Success", response.getMessage());
-        assertEquals(HttpStatus.OK, response.getStatus());
-        assertNotNull(response.getData());
-        assertEquals(2, response.getData().size());
-
-        SummaryDetailsDTO resultDto = response.getData().get(0);
-        assertEquals(8, resultDto.getTotalRecords());
-        assertEquals(1, resultDto.getRecordsFailed());
-        assertEquals(7, resultDto.getRecordsPassed());
-    }
+   Pageable pageable = PageRequest.of(summaryRequest != null && summaryRequest.getPageNum() != null 
+            ? summaryRequest.getPageNum() - 1 
+            : 0, 
+            summaryRequest != null && summaryRequest.getPageSize() != null 
+            ? summaryRequest.getPageSize() 
+            : 10, 
+            sort);
