@@ -1,6 +1,53 @@
- Integer pageNum = summaryRequest != null ? summaryRequest.getPageNum() : null;
+public APIResponse<List<AggregatedDTO>> getHealthCheckSummaryDetailsAggregated(GetSummaryDetailsRequest summaryRequest) {
+    List<BaseSearchRequest> filterCriteria = getFilterCriteria(summaryRequest);
+
+    GenericSpecification<HealthCheckSummary> specification = createSpecification(filterCriteria);
+
+    Sort sort = createSort(summaryRequest);
+
+    Pageable pageable = createPageable(summaryRequest, sort);
+
+    Page<HealthCheckSummary> pagedHealthCheckSummaryList = healthCheckSummaryRepository.findAll(specification, pageable);
+
+    List<AggregatedDTO> healthCheckSummaryList = healthCheckSummaryMapper.toAggregatedDtos(pagedHealthCheckSummaryList.getContent());
+
+    return new APIResponse<>(healthCheckSummaryList);
+}
+
+private List<BaseSearchRequest> getFilterCriteria(GetSummaryDetailsRequest summaryRequest) {
+    List<BaseSearchRequest> list = summaryRequest != null && summaryRequest.getFilterCriteria() != null
+            ? summaryRequest.getFilterCriteria()
+            : Collections.emptyList();
+
+    list.forEach(criteria -> {
+        if ("businessCheckGroup".equals(criteria.getKey())) {
+            criteria.setKey("busCheckGroup");
+        }
+    });
+
+    return list;
+}
+
+private GenericSpecification<HealthCheckSummary> createSpecification(List<BaseSearchRequest> filterCriteria) {
+    return OperationsUtils.createSpecification(filterCriteria, null);
+}
+
+private Sort createSort(GetSummaryDetailsRequest summaryRequest) {
+    Sort.Direction direction = Sort.Direction.ASC;
+    if (summaryRequest != null && summaryRequest.getSortDir() != null) {
+        direction = Sort.Direction.fromString(summaryRequest.getSortDir());
+    }
+
+    return Sort.by(new Sort.Order(direction, summaryRequest != null && summaryRequest.getSortBy() != null 
+            ? summaryRequest.getSortBy() 
+            : "defaultSortField"));
+}
+
+private Pageable createPageable(GetSummaryDetailsRequest summaryRequest, Sort sort) {
+    Integer pageNum = summaryRequest != null ? summaryRequest.getPageNum() : null;
     Integer pageSize = summaryRequest != null ? summaryRequest.getPageSize() : null;
 
-    Pageable pageable = PageRequest.of(pageNum != null ? pageNum - 1 : 0, 
-                                       pageSize != null ? pageSize : 10, 
-                                       sort);
+    return PageRequest.of(pageNum != null ? pageNum - 1 : 0, 
+                          pageSize != null ? pageSize : 10, 
+                          sort);
+}
