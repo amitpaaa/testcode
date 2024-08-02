@@ -1,80 +1,45 @@
-  @BeforeEach
-    void setUp() {
-        summaryRequest = new GetSummaryDetailsRequest();
-        summaryRequest.setFilterCriteria(Collections.emptyList());
-        summaryRequest.setSortBy("name");
-        summaryRequest.setSortDir("ASC");
-        summaryRequest.setPageNum(1);
+ @Test
+    public void testGetHealthCheckSummaryDetails_NormalOperation() {
+        // Arrange
+        GetSummaryDetailsRequest summaryRequest = new GetSummaryDetailsRequest();
         summaryRequest.setPageSize(10);
-    }
+        summaryRequest.setPageNum(0);
+        summaryRequest.setSortBy("busCheckGroup");
+        summaryRequest.setSortDir("asc");
 
-    @Test
-    void testGetHealthCheckSummaryDetails_withValidRequest() {
-        List<HealthCheckSummary> summaries = List.of(new HealthCheckSummary());
-        Page<HealthCheckSummary> pagedSummaries = new PageImpl<>(summaries);
-        List<AggregatedDTO> aggregatedDTOs = List.of(new AggregatedDTO());
+        HealthCheckSummary summary1 = new HealthCheckSummary();
+        summary1.setBusCheckGroup("group1");
+        HealthCheckSummary summary2 = new HealthCheckSummary();
+        summary2.setBusCheckGroup("group1");
 
-        when(healthCheckSummaryRepository.findAll(any(GenericSpecification.class), any(Pageable.class)))
-            .thenReturn(pagedSummaries);
-        when(healthCheckSummaryMapper.toAggregatedDtos(any())).thenReturn(aggregatedDTOs);
+        List<HealthCheckSummary> summaries = Arrays.asList(summary1, summary2);
 
-        APIResponse<List<AggregatedDTO>> response = healthCheckSummaryService.getHealthCheckSummaryDetails(summaryRequest);
+        when(healthCheckSummaryRepository.findAll(any(GenericSpecification.class))).thenReturn(summaries);
 
+        SummaryDetailsDTO dto1 = new SummaryDetailsDTO();
+        dto1.setTotalRecords(5);
+        dto1.setRecordsFailed(1);
+        dto1.setRecordsPassed(4);
+
+        SummaryDetailsDTO dto2 = new SummaryDetailsDTO();
+        dto2.setTotalRecords(3);
+        dto2.setRecordsFailed(0);
+        dto2.setRecordsPassed(3);
+
+        when(healthCheckSummaryMapper.toDtos(anyList())).thenReturn(Arrays.asList(dto1, dto2));
+
+        // Act
+        APIResponse<List<SummaryDetailsDTO>> response = processLogServiceImpl.getHealthCheckSummaryDetails(summaryRequest);
+
+        // Assert
+        assertNotNull(response);
         assertEquals("Success", response.getMessage());
         assertEquals(HttpStatus.OK, response.getStatus());
-        assertEquals(1, response.getTotalPages());
-        assertEquals(1, response.getCurrentPage());
-        assertEquals(aggregatedDTOs.size(), response.getData().size());
-    }
+        assertNotNull(response.getData());
+        assertEquals(2, response.getData().size());
 
-    @Test
-    void testGetHealthCheckSummaryDetails_withNullRequest() {
-        APIResponse<List<AggregatedDTO>> response = healthCheckSummaryService.getHealthCheckSummaryDetails(null);
-
-        assertEquals("Success", response.getMessage());
-        assertEquals(HttpStatus.OK, response.getStatus());
-        assertEquals(0, response.getTotalPages());
-        assertEquals(0, response.getCurrentPage());
-        assertEquals(0, response.getData().size());
-    }
-
-    @Test
-    void testGetHealthCheckSummaryDetails_withDifferentSortDirection() {
-        summaryRequest.setSortDir("DESC");
-        List<HealthCheckSummary> summaries = List.of(new HealthCheckSummary());
-        Page<HealthCheckSummary> pagedSummaries = new PageImpl<>(summaries);
-        List<AggregatedDTO> aggregatedDTOs = List.of(new AggregatedDTO());
-
-        when(healthCheckSummaryRepository.findAll(any(GenericSpecification.class), any(Pageable.class)))
-            .thenReturn(pagedSummaries);
-        when(healthCheckSummaryMapper.toAggregatedDtos(any())).thenReturn(aggregatedDTOs);
-
-        APIResponse<List<AggregatedDTO>> response = healthCheckSummaryService.getHealthCheckSummaryDetails(summaryRequest);
-
-        assertEquals("Success", response.getMessage());
-        assertEquals(HttpStatus.OK, response.getStatus());
-        assertEquals(1, response.getTotalPages());
-        assertEquals(1, response.getCurrentPage());
-        assertEquals(aggregatedDTOs.size(), response.getData().size());
-    }
-
-    @Test
-    void testGetHealthCheckSummaryDetails_withPagination() {
-        summaryRequest.setPageNum(2);
-        summaryRequest.setPageSize(5);
-        List<HealthCheckSummary> summaries = List.of(new HealthCheckSummary());
-        Page<HealthCheckSummary> pagedSummaries = new PageImpl<>(summaries, PageRequest.of(1, 5), 10);
-        List<AggregatedDTO> aggregatedDTOs = List.of(new AggregatedDTO());
-
-        when(healthCheckSummaryRepository.findAll(any(GenericSpecification.class), any(Pageable.class)))
-            .thenReturn(pagedSummaries);
-        when(healthCheckSummaryMapper.toAggregatedDtos(any())).thenReturn(aggregatedDTOs);
-
-        APIResponse<List<AggregatedDTO>> response = healthCheckSummaryService.getHealthCheckSummaryDetails(summaryRequest);
-
-        assertEquals("Success", response.getMessage());
-        assertEquals(HttpStatus.OK, response.getStatus());
-        assertEquals(2, response.getTotalPages());
-        assertEquals(2, response.getCurrentPage());
-        assertEquals(aggregatedDTOs.size(), response.getData().size());
+        SummaryDetailsDTO resultDto = response.getData().get(0);
+        assertEquals(8, resultDto.getTotalRecords());
+        assertEquals(1, resultDto.getRecordsFailed());
+        assertEquals(7, resultDto.getRecordsPassed());
     }
