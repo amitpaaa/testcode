@@ -1,0 +1,11 @@
+private static final Map<String, String> keyTransformationMap = new HashMap<>();
+
+    static {
+        keyTransformationMap.put("businessCheckGroup", "busCheckGroup");
+        keyTransformationMap.put("summaryAggValue", "groupAggValue");
+        // Add other key transformations as needed
+    }
+
+    public static String transformKey(String key) {
+        return keyTransformationMap.getOrDefault(key, key);
+    }
