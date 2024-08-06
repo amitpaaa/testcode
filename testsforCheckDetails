@@ -1,0 +1,84 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { of } from 'rxjs';
+import { CheckDetailsComponent } from './check-details.component';
+import { HealthCheckService } from '../../services/health-check.service';
+import { HttpClientModule } from '@angular/common/http';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
+describe('CheckDetailsComponent', () => {
+  let component: CheckDetailsComponent;
+  let fixture: ComponentFixture<CheckDetailsComponent>;
+  let mockHealthCheckService;
+  let mockDialogRef;
+
+  beforeEach(async () => {
+    mockHealthCheckService = jasmine.createSpyObj(['getCheckDetails', 'getUniqueDetails']);
+    mockDialogRef = jasmine.createSpyObj(['close']);
+
+    await TestBed.configureTestingModule({
+      declarations: [ CheckDetailsComponent ],
+      imports: [ HttpClientModule, BrowserAnimationsModule ],
+      providers: [
+        { provide: HealthCheckService, useValue: mockHealthCheckService },
+        { provide: MAT_DIALOG_DATA, useValue: { execid: '1', businessCheckGroup: 'group' } },
+        { provide: MatDialogRef, useValue: mockDialogRef }
+      ]
+    })
+    .compileComponents();
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(CheckDetailsComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should set default filter criteria on init', () => {
+    expect(component.defaultFilter).toEqual([
+      { key: 'execId', value: '1', operation: 'Equals', dataType: 'String' },
+      { key: 'businessCheckGroup', value: 'group', operation: 'Equals', dataType: 'String' }
+    ]);
+  });
+
+  it('should set default request and call search on init', () => {
+    spyOn(component, 'search');
+    component.ngOnInit();
+    expect(component.search).toHaveBeenCalledWith(component.defaultRequest);
+  });
+
+  it('should call healthCheckService.getCheckDetails in search', () => {
+    const mockResponse = { data: [], totalRecords: 0, currentPage: 1, totalPages: 1, message: 'Success', status: 'ok' };
+    mockHealthCheckService.getCheckDetails.and.returnValue(of(mockResponse));
+    mockHealthCheckService.getUniqueDetails.and.returnValue(of(mockResponse));
+
+    const searchRequest = {
+      filterCriteria: component.defaultFilter,
+      pageNum: component.defaultPageNum,
+      pageSize: component.pageSize,
+      sortBy: component.defaultSortBy,
+      sortDir: component.defaultSortDir
+    };
+
+    component.search(searchRequest);
+    expect(mockHealthCheckService.getCheckDetails).toHaveBeenCalledWith(searchRequest);
+  });
+
+  it('should load unique key data on search', () => {
+    const mockResponse = { data: [], totalRecords: 0, currentPage: 1, totalPages: 1, message: 'Success', status: 'ok' };
+    mockHealthCheckService.getCheckDetails.and.returnValue(of(mockResponse));
+    mockHealthCheckService.getUniqueDetails.and.returnValue(of(mockResponse));
+
+    component.search(component.defaultRequest);
+    expect(mockHealthCheckService.getUniqueDetails).toHaveBeenCalledWith(component.defaultRequest);
+  });
+
+  it('should close the dialog on onClose', () => {
+    component.onClose();
+    expect(mockDialogRef.close).toHaveBeenCalled();
+  });
+});
