@@ -1,7 +1,7 @@
-cellRenderer: (params) => {
-            if (params.value) {
-                const date = new Date(params.value);
-                return date.toLocaleDateString(); // Formats the date according to the locale, without time
-            }
-            return '';
-        }
+getCheckDetails(payload: SearchRequest): Observable<PagingResponse<CheckDetails>> {
+    // Use mock data for now
+    return of(CheckDetailsResponse).pipe(
+      catchError((err) => {
+        throw err;
+      })
+    );
