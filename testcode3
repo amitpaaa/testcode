@@ -1,11 +1,33 @@
-private static final Map<String, String> keyTransformationMap = new HashMap<>();
+searchGrid1(event: SearchRequest) {
+  this.executeSearch(event, this.defaultFilter1, 'defaultSortBy1', 'defaultSortDir1', this.pageSize1)
+    .subscribe(results => {
+      this.dataGrid1 = results.checkDetail;
+      
+      // Make the second request independently
+      this.healthcheckService.getUniqueFailureDetail(event)
+        .subscribe(uniqueKey => {
+          this.dataGrid2 = uniqueKey;
+        });
+    });
+}
 
-    static {
-        keyTransformationMap.put("businessCheckGroup", "busCheckGroup");
-        keyTransformationMap.put("summaryAggValue", "groupAggValue");
-        // Add other key transformations as needed
-    }
+searchGrid2(event: SearchRequest) {
+  this.executeSearch(event, this.defaultFilter2, 'defaultSortBy2', 'defaultSortDir2', this.pageSize2)
+    .subscribe(results => {
+      this.dataGrid2 = results.uniqueKey;
+    });
+}
 
-    public static String transformKey(String key) {
-        return keyTransformationMap.getOrDefault(key, key);
-    }
+executeSearch(event: SearchRequest, defaultFilter: any[], defaultSortBy: string, defaultSortDir: string, defaultPageSize: number) {
+  let filter = defaultFilter.filter(x => event.filterCriteria?.some(e => e.key === x.key) === false);
+  event.filterCriteria = event.filterCriteria.concat(filter);
+  event.filterCriteria = event.filterCriteria.filter(x => x.value);
+
+  event.sortBy = event.sortBy || defaultSortBy;
+  event.sortDir = event.sortDir || defaultSortDir;
+  event.pageSize = event.pageSize || defaultPageSize;
+
+  return this.healthcheckService.getCheckDetail(event).pipe(
+    map(checkDetail => ({ checkDetail }))
+  );
+}
