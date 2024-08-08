@@ -1,7 +1,21 @@
-getCheckDetails(payload: SearchRequest): Observable<PagingResponse<CheckDetails>> {
-    // Use mock data for now
-    return of(CheckDetailsResponse).pipe(
-      catchError((err) => {
-        throw err;
-      })
-    );
+searchGrid1(event: SearchRequest) {
+  // Start both requests in parallel
+  const checkDetail$ = this.healthcheckService.getCheckDetail(event);
+  const uniqueKey$ = this.healthcheckService.getUniqueFailureDetail(event);
+
+  // Subscribe to each observable separately
+  checkDetail$.subscribe(checkDetail => {
+    this.dataGrid1 = checkDetail;
+  });
+
+  uniqueKey$.subscribe(uniqueKey => {
+    this.dataGrid2 = uniqueKey;
+  });
+}
+
+searchGrid2(event: SearchRequest) {
+  this.healthcheckService.getUniqueFailureDetail(event)
+    .subscribe(uniqueKey => {
+      this.dataGrid2 = uniqueKey;
+    });
+}
