@@ -1,21 +1,18 @@
-searchGrid1(event: SearchRequest) {
-  // Start both requests in parallel
-  const checkDetail$ = this.healthcheckService.getCheckDetail(event);
-  const uniqueKey$ = this.healthcheckService.getUniqueFailureDetail(event);
+private void getGroupByPredicates(Root<T> root, CriteriaQuery<?> query, SearchCriteria criteria, CriteriaBuilder criteriaBuilder, Path<?> path) {
+    if ("groupBy".equalsIgnoreCase(criteria.getOperation())) {
+        // Assuming execId and BusinessCheckGroup are fields in your entity
+        Path<String> execIdPath = root.get("execId");
+        Path<String> businessCheckGroupPath = root.get("businessCheckGroup");
 
-  // Subscribe to each observable separately
-  checkDetail$.subscribe(checkDetail => {
-    this.dataGrid1 = checkDetail;
-  });
+        // Combining the two paths into a composite key
+        Expression<String> compositeKey = criteriaBuilder.concat(execIdPath, businessCheckGroupPath);
 
-  uniqueKey$.subscribe(uniqueKey => {
-    this.dataGrid2 = uniqueKey;
-  });
-}
+        if (path.getJavaType() == String.class) {
+            // Grouping by the composite key
+            query.groupBy(compositeKey);
 
-searchGrid2(event: SearchRequest) {
-  this.healthcheckService.getUniqueFailureDetail(event)
-    .subscribe(uniqueKey => {
-      this.dataGrid2 = uniqueKey;
-    });
+            // Optionally, you can add an orderBy clause if needed
+            query.orderBy(criteriaBuilder.asc(compositeKey));
+        }
+    }
 }
