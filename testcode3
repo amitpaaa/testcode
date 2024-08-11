@@ -4,3 +4,13 @@ filterCriteria.put("groupBy", "businessCheckGroup");
 // Create specification with updated filters
 GenericSpecification<HealthCheckSummary> specification = 
     OperationsUtils.createSpecification(filterCriteria, joinMap: null);
+
+
+
+
+BaseSearchRequest baseSearchRequest = summaryRequest.getBaseSearchRequest();
+baseSearchRequest.getFilterCriteria().put("groupBy", "businessCheckGroup");
+
+// Step 2: Create specification using the updated BaseSearchRequest
+GenericSpecification<HealthCheckSummary> specification = 
+    OperationsUtils.createSpecification(baseSearchRequest, joinMap: null);
