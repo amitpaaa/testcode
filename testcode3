@@ -17,9 +17,8 @@ GenericSpecification<HealthCheckSummary> specification =
 
 
 
+SearchCriteria groupByCriteria = new SearchCriteria("businessCheckGroup", "groupBy", "businessCheckGroup");
 
-SearchCriteria groupByCriteria = new SearchCriteria();
-groupByCriteria.setOperation("groupBy");
-groupByCriteria.setValue("businessCheckGroup"); // Column name or field for grouping
-
+// Adding it to the base search request
+BaseSearchRequest baseSearchRequest = summaryRequest.getBaseSearchRequest();
 baseSearchRequest.getCriterialist().add(groupByCriteria);
