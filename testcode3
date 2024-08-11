@@ -22,3 +22,10 @@ SearchCriteria groupByCriteria = new SearchCriteria("businessCheckGroup", "group
 // Adding it to the base search request
 BaseSearchRequest baseSearchRequest = summaryRequest.getBaseSearchRequest();
 baseSearchRequest.getCriterialist().add(groupByCriteria);
+
+
+
+
+ if (criteria.getValue() != null) {
+            query.where(criteriaBuilder.equal(execIdPath, criteria.getValue()));
+        }
