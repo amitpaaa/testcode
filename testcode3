@@ -1,42 +1,18 @@
-Map<String, Object> filterCriteria = summaryRequest.getFilterCriteria();
-filterCriteria.put("groupBy", "businessCheckGroup");
-
-// Create specification with updated filters
-GenericSpecification<HealthCheckSummary> specification = 
-    OperationsUtils.createSpecification(filterCriteria, joinMap: null);
-
-
-
-
-BaseSearchRequest baseSearchRequest = summaryRequest.getBaseSearchRequest();
-baseSearchRequest.getFilterCriteria().put("groupBy", "businessCheckGroup");
-
-// Step 2: Create specification using the updated BaseSearchRequest
-GenericSpecification<HealthCheckSummary> specification = 
-    OperationsUtils.createSpecification(baseSearchRequest, joinMap: null);
-
-
-
-SearchCriteria groupByCriteria = new SearchCriteria("businessCheckGroup", "groupBy", "businessCheckGroup");
-
-// Adding it to the base search request
-BaseSearchRequest baseSearchRequest = summaryRequest.getBaseSearchRequest();
-baseSearchRequest.getCriterialist().add(groupByCriteria);
-
-
-
-
- if (criteria.getValue() != null) {
-            query.where(criteriaBuilder.equal(execIdPath, criteria.getValue()));
-        }
-
-
-
-
- query.multiselect(
-            businessCheckGroupPath,
-            criteriaBuilder.sum(root.get("n_abs_amount_field_value")),
-            criteriaBuilder.sum(root.get("n_abs_principal_amount")),
-            criteriaBuilder.sum(root.get("n_abs_total_amount_field_value")),
-            criteriaBuilder.sum(root.get("n_abs_total_principal_amount")),
-        );
+private Map<String, Path<?>> getColumnPaths(Root<T> root) {
+    Map<String, Path<?>> columnPaths = new HashMap<>();
+    // List of column names
+    List<String> columns = Arrays.asList(
+        "n_abs_amount_field_value",
+        "n_abs_principal_amount",
+        "n_abs_total_amount_field_value",
+        "n_abs_total_principal_amount",
+        // Add other column names here
+        "businessCheckGroup",
+        "execId"
+    );
+    // Create paths for each column
+    for (String column : columns) {
+        columnPaths.put(column, root.get(column));
+    }
+    return columnPaths;
+}
