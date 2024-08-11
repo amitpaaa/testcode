@@ -29,3 +29,14 @@ baseSearchRequest.getCriterialist().add(groupByCriteria);
  if (criteria.getValue() != null) {
             query.where(criteriaBuilder.equal(execIdPath, criteria.getValue()));
         }
+
+
+
+
+ query.multiselect(
+            businessCheckGroupPath,
+            criteriaBuilder.sum(root.get("n_abs_amount_field_value")),
+            criteriaBuilder.sum(root.get("n_abs_principal_amount")),
+            criteriaBuilder.sum(root.get("n_abs_total_amount_field_value")),
+            criteriaBuilder.sum(root.get("n_abs_total_principal_amount")),
+        );
