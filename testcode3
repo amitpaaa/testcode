@@ -39,6 +39,10 @@ private void getGroupByPredicates(Root<T> root, CriteriaQuery<?> query, SearchCr
 
 
 
+ Path<BigDecimal> numericPath = (Path<BigDecimal>) columnPath;
+        selections.add(criteriaBuilder.sum(numericPath));
+
+
 
 
 
