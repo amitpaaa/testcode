@@ -36,3 +36,19 @@ private void getGroupByPredicates(Root<T> root, CriteriaQuery<?> query, SearchCr
         query.groupBy(reorderedColumnPaths.toArray(new Path<?>[0]));
     }
 }
+
+
+
+
+
+
+
+
+
+ List<SummaryDetailsDTO> healthCheckSummaryList = pagedHealthCheckSummaryList.stream()
+        .map(healthCheckSummary -> {
+            SummaryDetailsDTO dto = healthCheckSummaryMapper.toDto(healthCheckSummary);
+            dto.setIsGrouped(true); 
+            return dto;
+        })
+        .collect(Collectors.toList());
