@@ -1,25 +1,36 @@
+// Prepare the paths
+List<Path<?>> groupByColumns = new ArrayList<>();
+List<Selection<?>> selections = new ArrayList<>();
 
-  ruleCode: string;
-  fieldName: string;
-  principalAmountField: string;
-  ruleGroupVerNum: number;
+for (Map.Entry<String, Path<?>> entry : columnPaths.entrySet()) {
+    String columnName = entry.getKey();
+    Path<?> path = entry.getValue();
+    
+    // Handle numeric columns with sum
+    if (columnName.equals("n_abs_amount_field_value") || 
+        columnName.equals("n_abs_principal_amount") || 
+        columnName.equals("n_abs_total_amount_field_value") || 
+        columnName.equals("n_abs_total_principal_amount")) {
 
-  constructor(public dialogRef: MatDialogRef<HealthCheckDetailsPopupComponent>, @Inject(MAT_DIALOG_DATA) public data: any) { }
-
-  ngOnInit(): void {
-    if (this.dataSource && this.dataSource.data.length > 0) {
-      const firstRecord = this.dataSource.data[0];
-      this.ruleCode = firstRecord.ruleCode;
-      this.fieldName = firstRecord.fieldName;
-      this.principalAmountField = firstRecord.principalAmountField;
-      this.ruleGroupVerNum = firstRecord.ruleGroupVerNum;
-
-      this.uniqueKeyDataSource = {
-        data: firstRecord.uniqueKeyData,
-        totalRecords: firstRecord.uniqueKeyData.length,
-        currentPage: 1,
-        totalPages: 1,
-        message: 'Success'
-      };
+        if (path.getJavaType() == String.class) {
+            // Handle the case where the value is a String
+            // Typically, you cannot sum a String; decide the proper action or conversion
+            // selections.add(criteriaBuilder.sum(criteriaBuilder.toBigDecimal(path)));
+            // or leave it out if summing is inappropriate:
+            // selections.add(path); // This just adds the path without summing
+        } else {
+            // Cast path to Path<Number> for summing
+            selections.add(criteriaBuilder.sum((Path<Number>) path));
+        }
+    } else {
+        // Add to both selections and groupBy columns
+        selections.add(path);
+        groupByColumns.add(path);
     }
-  }
+}
+
+// Apply multiselect
+query.multiselect(selections);
+
+// Apply groupBy
+query.groupBy(groupByColumns.toArray(new Path<?>[0]));
