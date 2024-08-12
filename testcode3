@@ -16,3 +16,38 @@ private Map<String, Path<?>> getColumnPaths(Root<T> root) {
     }
     return columnPaths;
 }
+
+
+
+
+
+private Map<String, Path<?>> getColumnPaths(Root<T> root, Class<?> entityClass) {
+    Map<String, Path<?>> columnPaths = new HashMap<>();
+
+    // Get all fields from the entity class
+    Field[] fields = entityClass.getDeclaredFields();
+    
+    for (Field field : fields) {
+        String fieldName = field.getName();
+        columnPaths.put(fieldName, root.get(fieldName));
+    }
+
+    return columnPaths;
+}
+
+
+
+
+
+
+Map<String, Path<?>> columnPaths = getColumnPaths(root, HealthCheckSummary.class);
+
+
+multiselect
+
+
+List<Path<?>> groupByColumns = new ArrayList<>(columnPaths.values());
+query.groupBy(groupByColumns.toArray(new Path<?>[0]));
+
+
+
