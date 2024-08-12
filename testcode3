@@ -1,53 +1,38 @@
-private Map<String, Path<?>> getColumnPaths(Root<T> root) {
-    Map<String, Path<?>> columnPaths = new HashMap<>();
-    // List of column names
-    List<String> columns = Arrays.asList(
-        "n_abs_amount_field_value",
-        "n_abs_principal_amount",
-        "n_abs_total_amount_field_value",
-        "n_abs_total_principal_amount",
-        // Add other column names here
-        "businessCheckGroup",
-        "execId"
-    );
-    // Create paths for each column
-    for (String column : columns) {
-        columnPaths.put(column, root.get(column));
+private void getGroupByPredicates(Root<T> root, CriteriaQuery<?> query, SearchCriteria criteria, CriteriaBuilder criteriaBuilder, Path<?> path) {
+    if ("groupBy".equalsIgnoreCase(criteria.getOperation())) {
+        Path<String> execIdPath = root.get("execId");
+        if (criteria.getValue() != null) {
+            query.where(criteriaBuilder.equal(execIdPath, criteria.getValue()));
+        }
+        
+        List<String> responseAttributes = Arrays.asList(
+            "businessCheckGroup",
+            "totalPrincipalAmount",
+            "principalAmount"
+            // Add other necessary attributes here
+        );
+        
+        ConcurrentHashMap<String, Path<?>> columnPaths = getColumnPaths(root, HealthCheckSummary.class);
+        List<Selection<?>> selections = new ArrayList<>();
+        List<Path<?>> reorderedColumnPaths = new ArrayList<>();
+
+        for (Map.Entry<String, Path<?>> entry : columnPaths.entrySet()) {
+            String key = entry.getKey();
+            Path<?> columnPath = entry.getValue();
+
+            if (responseAttributes.contains(key)) {
+                if ("businessCheckGroup".equals(key)) {
+                    reorderedColumnPaths.add(0, columnPath); // Add to the start of the list
+                    selections.add(0, columnPath); // Add to the start of the selections
+                } else if ("totalPrincipalAmount".equals(key) || "principalAmount".equals(key)) {
+                    selections.add(criteriaBuilder.sum(criteriaBuilder.toBigDecimal(columnPath)));
+                } else {
+                    reorderedColumnPaths.add(columnPath); // Add to the end of the list
+                    selections.add(columnPath); // Add to the end of the selections
+                }
+            }
+        }
+        query.multiselect(selections);
+        query.groupBy(reorderedColumnPaths.toArray(new Path<?>[0]));
     }
-    return columnPaths;
 }
-
-
-
-
-
-private Map<String, Path<?>> getColumnPaths(Root<T> root, Class<?> entityClass) {
-    Map<String, Path<?>> columnPaths = new HashMap<>();
-
-    // Get all fields from the entity class
-    Field[] fields = entityClass.getDeclaredFields();
-    
-    for (Field field : fields) {
-        String fieldName = field.getName();
-        columnPaths.put(fieldName, root.get(fieldName));
-    }
-
-    return columnPaths;
-}
-
-
-
-
-
-
-Map<String, Path<?>> columnPaths = getColumnPaths(root, HealthCheckSummary.class);
-
-
-multiselect
-
-
-List<Path<?>> groupByColumns = new ArrayList<>(columnPaths.values());
-query.groupBy(groupByColumns.toArray(new Path<?>[0]));
-
-
-
