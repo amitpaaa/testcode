@@ -1,4 +1,3 @@
-// Prepare the paths
 List<Path<?>> groupByColumns = new ArrayList<>();
 List<Selection<?>> selections = new ArrayList<>();
 
@@ -13,11 +12,8 @@ for (Map.Entry<String, Path<?>> entry : columnPaths.entrySet()) {
         columnName.equals("n_abs_total_principal_amount")) {
 
         if (path.getJavaType() == String.class) {
-            // Handle the case where the value is a String
-            // Typically, you cannot sum a String; decide the proper action or conversion
-            // selections.add(criteriaBuilder.sum(criteriaBuilder.toBigDecimal(path)));
-            // or leave it out if summing is inappropriate:
-            // selections.add(path); // This just adds the path without summing
+            // Convert the String to BigDecimal and sum it
+            selections.add(criteriaBuilder.sum(criteriaBuilder.toBigDecimal(path)));
         } else {
             // Cast path to Path<Number> for summing
             selections.add(criteriaBuilder.sum((Path<Number>) path));
