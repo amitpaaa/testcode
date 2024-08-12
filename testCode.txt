@@ -1,32 +1,84 @@
-List<Path<?>> groupByColumns = new ArrayList<>();
-List<Selection<?>> selections = new ArrayList<>();
-
-for (Map.Entry<String, Path<?>> entry : columnPaths.entrySet()) {
-    String columnName = entry.getKey();
-    Path<?> path = entry.getValue();
+@Override
+public APIResponse<List<SummaryDetailsDTO>> getHealthCheckSummaryDetails(GetSummaryDetailsRequest summaryRequest) {
+    List<BaseSearchRequest> baseSearchRequest = summaryRequest.getFilterCriteria();
     
-    // Handle numeric columns with sum
-    if (columnName.equals("n_abs_amount_field_value") || 
-        columnName.equals("n_abs_principal_amount") || 
-        columnName.equals("n_abs_total_amount_field_value") || 
-        columnName.equals("n_abs_total_principal_amount")) {
+    BaseSearchRequest groupBySearchRequest = new BaseSearchRequest();
+    groupBySearchRequest.setKey("businessCheckGroup");
+    groupBySearchRequest.setOperation("groupBy");
+    groupBySearchRequest.setValue(baseSearchRequest.get(0).getValue());
+    baseSearchRequest.add(groupBySearchRequest);
+    
+    GenericSpecification<HealthCheckSummary> specification = OperationsUtils.createSpecification(baseSearchRequest, joinMap: null);
+    
+    Sort.Direction direction = Sort.Direction.fromString(summaryRequest.getSortDir());
+    Sort sort = Sort.by(new Order(direction, summaryRequest.getSortBy()));
+    
+    Pageable pageable = PageRequest.of(summaryRequest.getPageNum() - 1, summaryRequest.getPageSize(), sort);
+    
+    Page<HealthCheckSummary> pagedHealthCheckSummaryList = healthCheckSummaryRepository.findAll(specification, pageable);
+    
+    List<SummaryDetailsDTO> healthCheckSummaryList = pagedHealthCheckSummaryList.stream()
+        .map(healthCheckSummaryMapper::toDto)
+        .collect(Collectors.toList());
+    
+    return new APIResponse<>(
+        healthCheckSummaryList,
+        SUCCESS,
+        pagedHealthCheckSummaryList.getTotalPages(),
+        pagedHealthCheckSummaryList.getNumber() + 1,
+        healthCheckSummaryList.size(),
+        HttpStatus.OK
+    );
+}
 
-        if (path.getJavaType() == String.class) {
-            // Convert the String to BigDecimal and sum it
-            selections.add(criteriaBuilder.sum(criteriaBuilder.toBigDecimal(path)));
-        } else {
-            // Cast path to Path<Number> for summing
-            selections.add(criteriaBuilder.sum((Path<Number>) path));
+private void getGroupByPredicates(Root<T> root, CriteriaQuery<?> query, SearchCriteria criteria, CriteriaBuilder criteriaBuilder, Path<?> path) {
+    if ("groupBy".equalsIgnoreCase(criteria.getOperation())) {
+        Path<String> execIdPath = root.get("execId");
+        if (criteria.getValue() != null) {
+            query.where(criteriaBuilder.equal(execIdPath, criteria.getValue()));
         }
-    } else {
-        // Add to both selections and groupBy columns
-        selections.add(path);
-        groupByColumns.add(path);
+        
+        List<String> responseAttributes = Arrays.asList(
+            "businessCheckGroup",
+            "totalPrincipalAmount",
+            "principalAmount"
+            // Add other necessary attributes here
+        );
+        
+        ConcurrentHashMap<String, Path<?>> columnPaths = getColumnPaths(root, HealthCheckSummary.class);
+        List<Path<?>> reorderedColumnPaths = new ArrayList<>();
+        
+        for (Map.Entry<String, Path<?>> entry : columnPaths.entrySet()) {
+            String key = entry.getKey();
+            Path<?> path = entry.getValue();
+            
+            if (responseAttributes.contains(key)) {
+                if ("businessCheckGroup".equals(key)) {
+                    reorderedColumnPaths.add(0, path); // Add to the start of the list
+                } else {
+                    reorderedColumnPaths.add(path); // Add to the end of the list
+                }
+            }
+        }
+        
+        query.groupBy(reorderedColumnPaths.toArray(new Path<?>[0]));
+        
+        if (path.getJavaType() == String.class) {
+            query.multiselect(
+                reorderedColumnPaths.stream()
+                    .map(criteriaBuilder::toString)
+                    .toArray(Selection[]::new)
+            );
+        }
     }
 }
 
-// Apply multiselect
-query.multiselect(selections);
-
-// Apply groupBy
-query.groupBy(groupByColumns.toArray(new Path<?>[0]));
+private Map<String, Path<?>> getColumnPaths(Root<T> root, Class<?> entityClass) {
+    Map<String, Path<?>> columnPaths = new HashMap<>();
+    Field[] fields = entityClass.getDeclaredFields();
+    for (Field field : fields) {
+        String fieldName = field.getName();
+        columnPaths.put(fieldName, root.get(fieldName));
+    }
+    return columnPaths;
+}
