@@ -1,2 +1,14 @@
 List<String> groupByColumns = Arrays.asList("groupColumn1", "groupColumn2");
 List<String> sumColumns = Arrays.asList("sumColumn1", "sumColumn2");
+
+
+
+ public GenericSpecification(List<SearchCriteria> criteriaList, 
+                                Map<String, String> joinMap,
+                                List<String> groupByColumns, 
+                                List<String> sumColumns) {
+        this.criteriaList = criteriaList;
+        this.groupByColumns = groupByColumns;
+        this.sumColumns = sumColumns;
+        // Initialize other fields or logic related to joinMap if needed
+    }
