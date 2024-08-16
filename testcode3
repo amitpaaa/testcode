@@ -2,3 +2,13 @@
         Predicate groupByPredicate = builder.equal(subRoot.get(groupByColumn), root.get(groupByColumn));
         subqueryPredicates.add(groupByPredicate);
     }
+
+
+
+Predicate joinPredicate = builder.conjunction();
+    for (String column : groupByColumns) {
+        Path<?> mainPath = root.get(column);
+        Path<?> subPath = subRoot.get(column);
+        joinPredicate = builder.and(joinPredicate, builder.equal(mainPath, subPath));
+    }
+    query.where(joinPredicate);
