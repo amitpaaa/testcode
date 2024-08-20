@@ -1,14 +1,52 @@
- for (String groupByColumn : groupByColumns) {
-        Predicate groupByPredicate = builder.equal(subRoot.get(groupByColumn), root.get(groupByColumn));
-        subqueryPredicates.add(groupByPredicate);
-    }
+private Predicate buildSubqueryPredicate(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder builder) {
+    // Create the subquery
+    Subquery<Tuple> subquery = query.subquery(Tuple.class);
+    Root<T> subRoot = subquery.from(root.getJavaType());
 
-
-
-Predicate joinPredicate = builder.conjunction();
+    // Define the group by columns for the subquery
+    List<Expression<?>> groupByExpressions = new ArrayList<>();
     for (String column : groupByColumns) {
-        Path<?> mainPath = root.get(column);
-        Path<?> subPath = subRoot.get(column);
-        joinPredicate = builder.and(joinPredicate, builder.equal(mainPath, subPath));
+        groupByExpressions.add(subRoot.get(column));
     }
-    query.where(joinPredicate);
+
+    // Define the subquery selections
+    List<Selection<?>> subSelections = new ArrayList<>();
+    for (String sumColumn : sumColumns) {
+        subSelections.add(builder.sum(subRoot.get(sumColumn)).alias(sumColumn));
+    }
+
+    // Apply the selections and group by to the subquery
+    subquery.select(builder.tuple(subSelections.toArray(new Selection<?>[0])))
+            .groupBy(groupByExpressions);
+
+    // Apply predicates to the subquery (ensure subRoot is used)
+    List<Predicate> subqueryPredicates = buildPredicates(subRoot, builder);
+    subquery.where(subqueryPredicates.toArray(new Predicate[0]));
+
+    // Main query selections
+    List<Selection<?>> mainSelections = new ArrayList<>();
+    root.getModel().getAttributes().forEach(attribute -> {
+        String columnName = attribute.getName();
+        if (!groupByColumns.contains(columnName)) {
+            mainSelections.add(root.get(columnName));
+        }
+    });
+
+    // Add aggregated columns to the main selections
+    for (String sumColumn : sumColumns) {
+        mainSelections.add(builder.sum(root.get(sumColumn)).alias(sumColumn));
+    }
+
+    query.multiselect(mainSelections);
+
+    // Create join predicates between the main query and subquery
+    List<Predicate> joinPredicates = new ArrayList<>();
+    for (String column : groupByColumns) {
+        joinPredicates.add(builder.equal(root.get(column), subRoot.get(column)));
+    }
+
+    // Apply the join predicates to the main query
+    query.where(builder.and(joinPredicates.toArray(new Predicate[0])));
+
+    return builder.conjunction(); // Return a neutral predicate to indicate success
+}
