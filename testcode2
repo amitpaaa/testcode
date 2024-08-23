@@ -29,3 +29,16 @@ private Predicate buildSubqueryPredicate(Root<T> root, CriteriaQuery<?> query, C
 
     return builder.and(buildPredicates(root, builder).toArray(new Predicate[0]));
 }
+
+
+
+
+ for (String selectColumn : selectColumns) {
+        Expression<?> columnExpression = root.get(selectColumn);
+        selectionList.add(columnExpression);
+
+        // Include in group by if not a sum column
+        if (!sumColumns.contains(selectColumn)) {
+            groupByExpressions.add(columnExpression);
+        }
+    }
