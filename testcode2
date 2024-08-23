@@ -1,18 +1,31 @@
-private void getGroupByPredicates(Root<T> root, CriteriaQuery<?> query, SearchCriteria criteria, CriteriaBuilder criteriaBuilder, Path<?> path) {
-    if ("groupBy".equalsIgnoreCase(criteria.getOperation())) {
-        // Assuming execId and BusinessCheckGroup are fields in your entity
-        Path<String> execIdPath = root.get("execId");
-        Path<String> businessCheckGroupPath = root.get("businessCheckGroup");
+private Predicate buildSubqueryPredicate(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder builder) {
+    List<Selection<?>> selectionList = new ArrayList<>();
+    List<Expression<?>> groupByExpressions = new ArrayList<>();
 
-        // Combining the two paths into a composite key
-        Expression<String> compositeKey = criteriaBuilder.concat(execIdPath, businessCheckGroupPath);
-
-        if (path.getJavaType() == String.class) {
-            // Grouping by the composite key
-            query.groupBy(compositeKey);
-
-            // Optionally, you can add an orderBy clause if needed
-            query.orderBy(criteriaBuilder.asc(compositeKey));
-        }
+    // Add group by columns to selection and groupBy expressions
+    for (String groupByColumn : groupByColumns) {
+        Expression<?> groupByExpression = root.get(groupByColumn);
+        groupByExpressions.add(groupByExpression);
+        selectionList.add(groupByExpression);
     }
+
+    // Add sum columns to selection list
+    for (String sumColumn : sumColumns) {
+        selectionList.add(builder.sum(root.get(sumColumn)).alias(sumColumn));
+    }
+
+    // Add all other columns to the selection list
+    root.getModel().getAttributes().forEach(attribute -> {
+        String columnName = attribute.getName();
+        if (!groupByColumns.contains(columnName) && !sumColumns.contains(columnName)) {
+            selectionList.add(root.get(columnName));
+        }
+    });
+
+    // Apply selections, groupBy, and predicates to the query
+    query.multiselect(selectionList)
+         .groupBy(groupByExpressions)
+         .where(buildPredicates(root, builder).toArray(new Predicate[0]));
+
+    return builder.and(buildPredicates(root, builder).toArray(new Predicate[0]));
 }
