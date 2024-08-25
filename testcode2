@@ -6,3 +6,19 @@
         // Create a join condition between the main query and subquery
         joinPredicate = builder.and(joinPredicate, builder.equal(mainPath, subqueryPath));
     }
+
+
+
+
+
+      Path<?> subqueryPath = subquery.getCorrelatedJoins().stream()
+                .filter(join -> join.getCorrelationRoot().get(column) != null)
+                .findFirst()
+                .map(join -> join.getCorrelationRoot().get(column))
+                .orElse(null);
+
+        if (subqueryPath != null) {
+            // Add join condition
+            joinPredicate = builder.and(joinPredicate, builder.equal(mainPath, subqueryPath));
+        }
+    }
