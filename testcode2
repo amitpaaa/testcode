@@ -1,9 +1,8 @@
-List<Predicate> joinPredicates = new ArrayList<>();
-    for (int i = 0; i < groupByColumns.size(); i++) {
+  for (int i = 0; i < groupByColumns.size(); i++) {
         String column = groupByColumns.get(i);
-        joinPredicates.add(
-            builder.equal(root.get(column), subquery.getRoots().iterator().next().get(column))
-        );
-    }
+        Expression<?> mainPath = root.get(column);
+        Expression<?> subqueryPath = subquery.getSelection().get(i);
 
-    Predicate joinPredicate = builder.and(joinPredicates.toArray(new Predicate[0]));
+        // Create a join condition between the main query and subquery
+        joinPredicate = builder.and(joinPredicate, builder.equal(mainPath, subqueryPath));
+    }
