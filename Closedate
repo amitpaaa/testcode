@@ -1,0 +1,11 @@
+onSave() {
+  const issueStatus = this.issueStatusPayload.status;
+  const expectedCloseDate = this.issueStatusPayload.expectedCloseDt;
+
+  // Check if expectedCloseDate has changed
+  const isCloseDateChanged = new Date(expectedCloseDate).valueOf() !== new Date(this.issueDetail.expectedCloseDate).valueOf();
+
+  // Show comment popup if:
+  // 1. expectedCloseDate has changed, or
+  // 2. issueStatus is 'CLOSED' and expectedCloseDate is not null
+  if (isCloseDateChanged || (issueStatus === 'CLOSED' && expectedCloseDate)) {
