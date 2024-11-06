@@ -1,1 +1,12 @@
-    List<Selection<?>> subquerySelections = (List<Selection<?>>) subquery.getSelection().getCompoundSelectionItems();
+import { Component, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { FormGroup } from '@angular/forms';
+
+@Component({
+  selector: 'app-daily-issue-details-dialog',
+  templateUrl: './daily-issue-details-dialog.component.html',
+  styleUrls: ['./daily-issue-details-dialog.component.scss']
+})
+export class DailyIssueDetailsDialogComponent {
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { issueDetailForm: FormGroup }) {}
+}
