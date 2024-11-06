@@ -1,77 +1,30 @@
-private Predicate buildSubqueryPredicate(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder builder) {
-    // Step 1: Build the subquery
-    Subquery<Tuple> subquery = buildSubquery(query, builder, root);
-
-    // Step 2: Build the main query
-    Predicate mainQueryPredicate = buildMainQuery(root, query, builder, subquery);
-
-    return mainQueryPredicate;
-}
-
-private Subquery<Tuple> buildSubquery(CriteriaQuery<?> query, CriteriaBuilder builder, Root<T> root) {
-    Subquery<Tuple> subquery = query.subquery(Tuple.class);
-    Root<T> subRoot = subquery.from(root.getJavaType());
-
-    // Group by and selection logic
-    List<Expression<?>> groupByExpressions = new ArrayList<>();
-    List<Selection<?>> subSelections = new ArrayList<>();
-
-    // Add group by columns
-    for (String column : groupByColumns) {
-        Path<?> subPath = subRoot.get(column);
-        groupByExpressions.add(subPath);
-        subSelections.add(subPath);
-    }
-
-    // Add sum columns
-    for (String sumColumn : sumColumns) {
-        subSelections.add(builder.sum(subRoot.get(sumColumn)).alias(sumColumn));
-    }
-
-    // Set the subquery's select and group by expressions
-    subquery.select(builder.tuple(subSelections.toArray(new Selection<?>[0])))
-            .groupBy(groupByExpressions);
-
-    // Add predicates to the subquery
-    List<Predicate> subqueryPredicates = buildPredicates(subRoot, builder);
-    subquery.where(subqueryPredicates.toArray(new Predicate[0]));
-
-    // Debugging: Print or log the subquery
-    System.out.println("Subquery: " + subquery);
-
-    return subquery;
-}
-
-private Predicate buildMainQuery(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder builder, Subquery<Tuple> subquery) {
-    // Main query selections
-    List<Selection<?>> mainSelections = new ArrayList<>();
-    
-    root.getModel().getAttributes().forEach(attribute -> {
-        String columnName = attribute.getName();
-        if (!groupByColumns.contains(columnName) && !sumColumns.contains(columnName)) {
-            mainSelections.add(root.get(columnName));
-        }
-    });
-
-    // Add sum columns to the main selections
-    for (String column : sumColumns) {
-        mainSelections.add(root.get(column));
-    }
-
-    // Set the main query selections
-    query.multiselect(mainSelections);
-
-    // Build join conditions between main query and subquery
-    Predicate joinPredicate = builder.conjunction();
-    for (String column : groupByColumns) {
-        joinPredicate = builder.and(joinPredicate, builder.equal(root.get(column), subquery.getSelection().getGroup(column)));
-    }
-
-    // Set the main query's where clause
-    query.where(joinPredicate);
-
-    // Debugging: Print or log the main query
-    System.out.println("Main Query: " + query);
-
-    return joinPredicate;
-}
+<h2>Issue Disposition Daily Details</h2>
+<div class="popup-container">
+  <div class="detail-row">
+    <div><strong>Issue Log Code:</strong> {{ data.issueDetailForm.get('issueLogCode').value }}</div>
+    <div><strong>Contract Name:</strong> {{ data.issueDetailForm.get('contractName').value }}</div>
+    <div><strong>Expected Close Date:</strong> {{ data.issueDetailForm.get('expectedCloseDate').value | date }}</div>
+    <div><strong>Days Aged:</strong> {{ data.issueDetailForm.get('daysAged').value }}</div>
+  </div>
+  <!-- Add more fields here as per your layout in the image -->
+  
+  <table>
+    <thead>
+      <tr>
+        <th>As of Date</th>
+        <th>Process Date</th>
+        <th>Error Count</th>
+        <th>Error Balance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{ data.issueDetailForm.get('asOfDate').value | date }}</td>
+        <td>{{ data.issueDetailForm.get('errorCount').value }}</td>
+        <td>{{ data.issueDetailForm.get('principalErrorField').value }}</td>
+        <td>{{ data.issueDetailForm.get('principalErrorBalance').value }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <button mat-button (click)="closeDialog()">Close</button>
+</div>
