@@ -4,3 +4,11 @@ filteredIssueDetails = issueDispositionDetails.map(detail => ({
     errorCount: detail.errorCount,
     errorBalance: detail.errorBalance
   }));
+
+
+
+dataSource = [
+  { asofDate: new Date('2024-01-01'), processDate: new Date('2024-01-02'), errorCount: 120, errorBalance: 13440 },
+  { asofDate: new Date('2024-02-01'), processDate: new Date('2024-02-02'), errorCount: 95, errorBalance: 10250 },
+  { asofDate: new Date('2024-03-01'), processDate: new Date('2024-03-02'), errorCount: 85, errorBalance: 8990 }
+];
