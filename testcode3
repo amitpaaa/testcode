@@ -1,8 +1,6 @@
- dataSource() {
-    return issueDispositionDetails.map(detail => ({
-      asofDate: detail.asofDate,
-      processDate: detail.issueStartDate,
-      errorCount: detail.errorCount,
-      errorBalance: detail.errorBalance
-    }));
-  }
+filteredIssueDetails = issueDispositionDetails.map(detail => ({
+    asofDate: detail.asofDate,
+    processDate: detail.processDate,
+    errorCount: detail.errorCount,
+    errorBalance: detail.errorBalance
+  }));
