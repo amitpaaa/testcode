@@ -1,30 +1,8 @@
-<h2>Issue Disposition Daily Details</h2>
-<div class="popup-container">
-  <div class="detail-row">
-    <div><strong>Issue Log Code:</strong> {{ data.issueDetailForm.get('issueLogCode').value }}</div>
-    <div><strong>Contract Name:</strong> {{ data.issueDetailForm.get('contractName').value }}</div>
-    <div><strong>Expected Close Date:</strong> {{ data.issueDetailForm.get('expectedCloseDate').value | date }}</div>
-    <div><strong>Days Aged:</strong> {{ data.issueDetailForm.get('daysAged').value }}</div>
-  </div>
-  <!-- Add more fields here as per your layout in the image -->
-  
-  <table>
-    <thead>
-      <tr>
-        <th>As of Date</th>
-        <th>Process Date</th>
-        <th>Error Count</th>
-        <th>Error Balance</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>{{ data.issueDetailForm.get('asOfDate').value | date }}</td>
-        <td>{{ data.issueDetailForm.get('errorCount').value }}</td>
-        <td>{{ data.issueDetailForm.get('principalErrorField').value }}</td>
-        <td>{{ data.issueDetailForm.get('principalErrorBalance').value }}</td>
-      </tr>
-    </tbody>
-  </table>
-  <button mat-button (click)="closeDialog()">Close</button>
-</div>
+ dataSource() {
+    return issueDispositionDetails.map(detail => ({
+      asofDate: detail.asofDate,
+      processDate: detail.processDate,
+      errorCount: detail.errorCount,
+      errorBalance: detail.errorBalance
+    }));
+  }
