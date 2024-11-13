@@ -1,7 +1,7 @@
  dataSource() {
     return issueDispositionDetails.map(detail => ({
       asofDate: detail.asofDate,
-      processDate: detail.processDate,
+      processDate: detail.issueStartDate,
       errorCount: detail.errorCount,
       errorBalance: detail.errorBalance
     }));
