@@ -1,7 +1,26 @@
-constructor(public dialogRef: MatDialogRef<DailyIssueDetailsComponent>) {}
-
-  ngOnInit() {
-    // Access values directly from the form
-    this.issueLogCode = this.issueDetailForm.get('issueLogCode').value;
-    this.contractName = this.issueDetailForm.get('contractName').value;
+ {
+    issueLogCode: 'ILC001',
+    issueStatus: 'Open',
+    queryCode: 'QC001',
+    sourcesystem: 'System A',
+    targetSystem: 'System B',
+    healthCheck: 'Check A',
+    columnName: 'Column X',
+    checkDescription: 'Description A',
+    healthCheckDataSet: 'DataSet1',
+    openDate: new Date('2024-01-01'),
+    expectedClosedDate: new Date('2024-01-15'),
+  },
+  {
+    issueLogCode: 'ILC002',
+    issueStatus: 'Closed',
+    queryCode: 'QC002',
+    sourcesystem: 'System C',
+    targetSystem: 'System D',
+    healthCheck: 'Check B',
+    columnName: 'Column Y',
+    checkDescription: 'Description B',
+    healthCheckDataSet: 'DataSet2',
+    openDate: new Date('2024-02-01'),
+    expectedClosedDate: new Date('2024-02-15'),
   }
