@@ -1,106 +1,64 @@
-<mat-dialog-content class="popup-content container container-column">
-  <!-- Title -->
-  <h2>Issue Disposition Daily Details</h2>
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { DailyIssueDetailsComponent } from './daily-issue-details.component';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl } from '@angular/forms';
+import { MatIconTestingModule } from '@angular/material/icon/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MaterialCommonModule } from 'src/material.module';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-  <!-- Issue Details Section -->
-  <div class="issue-details-section">
-    <div class="fx-wrap-container">
-      <mat-form-field>
-        <mat-label>Issue Log Code</mat-label>
-        <input readonly matInput formControlName="issueLogCode">
-      </mat-form-field>
+describe('DailyIssueDetailsComponent', () => {
+  let component: DailyIssueDetailsComponent;
+  let fixture: ComponentFixture<DailyIssueDetailsComponent>;
 
-      <mat-form-field>
-        <mat-label>Contract Name</mat-label>
-        <input readonly matInput formControlName="contractName">
-      </mat-form-field>
+  beforeEach(async () => {
+    // Mock dialog data
+    const mockDialogData = {
+      issueDetailForm: new FormGroup({
+        issueLogCode: new FormControl('TestCode'),
+        contractName: new FormControl('TestContract'),
+      }),
+    };
 
-      <mat-form-field>
-        <mat-label>Query Code</mat-label>
-        <input readonly matInput formControlName="queryCode">
-      </mat-form-field>
+    // Mock MatDialogRef
+    const mockDialogRef = {
+      close: jasmine.createSpy('close'),
+    };
 
-      <mat-form-field>
-        <mat-label>Column Name</mat-label>
-        <input readonly matInput formControlName="columnName">
-      </mat-form-field>
+    await TestBed.configureTestingModule({
+      declarations: [DailyIssueDetailsComponent],
+      imports: [
+        HttpClientTestingModule,
+        ReactiveFormsModule,
+        MaterialCommonModule,
+        NoopAnimationsModule,
+        MatIconTestingModule,
+      ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
+      providers: [
+        FormBuilder,
+        { provide: MatDialogRef, useValue: mockDialogRef },
+        { provide: MAT_DIALOG_DATA, useValue: mockDialogData },
+      ],
+    }).compileComponents();
 
-      <mat-form-field>
-        <mat-label>Check Description</mat-label>
-        <input readonly matInput formControlName="checkDescription">
-      </mat-form-field>
+    fixture = TestBed.createComponent(DailyIssueDetailsComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
 
-      <mat-form-field>
-        <mat-label>Principal Error Field</mat-label>
-        <input readonly matInput formControlName="principalErrorField">
-      </mat-form-field>
-    </div>
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
 
-    <div class="fx-wrap-container">
-      <mat-form-field>
-        <mat-label>Issue Open Date</mat-label>
-        <input readonly matInput [matDatepicker]="pkrIssueOpenDtPopup" formControlName="issueOpenDate">
-        <mat-datepicker-toggle matSuffix [for]="pkrIssueOpenDtPopup">
-          <mat-icon matDatepickerToggleIcon svgIcon="WF_icon_calendar"></mat-icon>
-        </mat-datepicker-toggle>
-        <mat-datepicker #pkrIssueOpenDtPopup></mat-datepicker>
-      </mat-form-field>
+  it('should initialize with provided dialog data', () => {
+    expect(component.issueLogCode).toBe('TestCode');
+    expect(component.contractName).toBe('TestContract');
+  });
 
-      <mat-form-field>
-        <mat-label>Expected Close Date</mat-label>
-        <input matInput [matDatepicker]="pkrExpCloseDtPopup" formControlName="expectedCloseDate">
-        <mat-datepicker-toggle matSuffix [for]="pkrExpCloseDtPopup">
-          <mat-icon matDatepickerToggleIcon svgIcon="WF_icon_calendar"></mat-icon>
-        </mat-datepicker-toggle>
-        <mat-datepicker #pkrExpCloseDtPopup></mat-datepicker>
-      </mat-form-field>
-
-      <mat-form-field>
-        <mat-label>Days Aged</mat-label>
-        <input readonly matInput formControlName="daysAged">
-      </mat-form-field>
-
-      <mat-form-field>
-        <mat-label>Root Cause</mat-label>
-        <input readonly matInput formControlName="rootCause">
-      </mat-form-field>
-    </div>
-  </div>
-
-  <!-- Table Section -->
-  <div class="table-section">
-    <table mat-table [dataSource]="issueDetailsData" class="mat-elevation-z8">
-      <!-- As of Date Column -->
-      <ng-container matColumnDef="asOfDate">
-        <th mat-header-cell *matHeaderCellDef> As of Date </th>
-        <td mat-cell *matCellDef="let element"> {{ element.asOfDate | date: 'MM/dd/yyyy' }} </td>
-      </ng-container>
-
-      <!-- Process Date Column -->
-      <ng-container matColumnDef="processDate">
-        <th mat-header-cell *matHeaderCellDef> Process Date </th>
-        <td mat-cell *matCellDef="let element"> {{ element.processDate | date: 'MM/dd/yyyy' }} </td>
-      </ng-container>
-
-      <!-- Error Count Column -->
-      <ng-container matColumnDef="errorCount">
-        <th mat-header-cell *matHeaderCellDef> Error Count </th>
-        <td mat-cell *matCellDef="let element"> {{ element.errorCount }} </td>
-      </ng-container>
-
-      <!-- Error Balance Column -->
-      <ng-container matColumnDef="errorBalance">
-        <th mat-header-cell *matHeaderCellDef> Error Balance </th>
-        <td mat-cell *matCellDef="let element"> {{ element.errorBalance | currency }} </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-    </table>
-  </div>
-
-  <!-- Close Button -->
-  <div class="dialog-actions">
-    <button mat-button (click)="closeDialog()">Close</button>
-  </div>
-</mat-dialog-content>
+  it('should close the dialog on onClose()', () => {
+    component.onClose();
+    expect(TestBed.inject(MatDialogRef).close).toHaveBeenCalled();
+  });
+});
