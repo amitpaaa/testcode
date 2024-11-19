@@ -1,26 +1,33 @@
- {
-    issueLogCode: 'ILC001',
-    issueStatus: 'Open',
-    queryCode: 'QC001',
-    sourcesystem: 'System A',
-    targetSystem: 'System B',
-    healthCheck: 'Check A',
-    columnName: 'Column X',
-    checkDescription: 'Description A',
-    healthCheckDataSet: 'DataSet1',
-    openDate: new Date('2024-01-01'),
-    expectedClosedDate: new Date('2024-01-15'),
-  },
-  {
-    issueLogCode: 'ILC002',
-    issueStatus: 'Closed',
-    queryCode: 'QC002',
-    sourcesystem: 'System C',
-    targetSystem: 'System D',
-    healthCheck: 'Check B',
-    columnName: 'Column Y',
-    checkDescription: 'Description B',
-    healthCheckDataSet: 'DataSet2',
-    openDate: new Date('2024-02-01'),
-    expectedClosedDate: new Date('2024-02-15'),
-  }
+<div class="filter-container">
+  <!-- First Row: Processing Date and As Of Date -->
+  <div class="row">
+    <div class="col">
+      <label for="processingDate">Processing Date</label>
+      <input
+        id="processingDate"
+        type="date"
+        [(ngModel)]="filterDefs[0].value"
+      />
+    </div>
+    <div class="col">
+      <label for="asOfDate">As Of Date</label>
+      <input
+        id="asOfDate"
+        type="date"
+        [(ngModel)]="filterDefs[1].value"
+      />
+    </div>
+  </div>
+
+  <!-- Second Row: Contract Name -->
+  <div class="row">
+    <div class="col">
+      <label for="contractName">Contract Name</label>
+      <input
+        id="contractName"
+        type="text"
+        [(ngModel)]="filterDefs[2].value"
+      />
+    </div>
+  </div>
+</div>
