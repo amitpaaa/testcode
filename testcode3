@@ -1,33 +1,74 @@
-<div class="filter-container">
-  <!-- First Row: Processing Date and As Of Date -->
-  <div class="row">
-    <div class="col">
-      <label for="processingDate">Processing Date</label>
-      <input
-        id="processingDate"
-        type="date"
-        [(ngModel)]="filterDefs[0].value"
-      />
-    </div>
-    <div class="col">
-      <label for="asOfDate">As Of Date</label>
-      <input
-        id="asOfDate"
-        type="date"
-        [(ngModel)]="filterDefs[1].value"
-      />
-    </div>
-  </div>
+import { Component, Inject, OnInit } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { IssueDetailService } from 'path-to-issue-detail-service';
+import { ApiResponse, IssueDailyDetail, PagingResponse } from 'path-to-models';
+import { Signal, computed } from '@angular/core';
+import { catchError } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 
-  <!-- Second Row: Contract Name -->
-  <div class="row">
-    <div class="col">
-      <label for="contractName">Contract Name</label>
-      <input
-        id="contractName"
-        type="text"
-        [(ngModel)]="filterDefs[2].value"
-      />
-    </div>
-  </div>
-</div>
+export class DailyIssueDetailsComponent implements OnInit {
+  issueDetailForm: FormGroup;
+  issueLogCode: string;
+  contractName: string;
+  issueDailyDetails: IssueDailyDetail[] = [];
+  dataSource: Signal<PagingResponse<IssueDailyDetail>>;
+  pageSize: number = 50;
+
+  columnDefs = [
+    { name: 'As Of Date', id: 'asOfDate', width: 100, isActive: true, type: FieldType.Date, filterType: FilterType.Date },
+    { name: 'Process Date', id: 'executionTimestamp', width: 100, isActive: true, type: FieldType.Date, filterType: FilterType.Date },
+    { name: 'Error Count', id: 'errorCount', width: 100, isActive: true, type: FieldType.Number, filterType: FilterType.Number },
+    { name: 'Error Balance', id: 'principalErrorBalance', width: 100, isActive: true, type: FieldType.Number, filterType: FilterType.Number },
+  ];
+
+  constructor(
+    @Inject(MAT_DIALOG_DATA) public data: { issueDetailForm: FormGroup },
+    public dialogRef: MatDialogRef<DailyIssueDetailsComponent>,
+    private issueDetailService: IssueDetailService
+  ) {
+    this.issueLogCode = data.issueDetailForm.get('issueLogCode')?.value;
+    this.contractName = data.issueDetailForm.get('contractName')?.value;
+  }
+
+  ngOnInit(): void {
+    this.fetchIssueDetails();
+  }
+
+  fetchIssueDetails(): void {
+    this.issueDetailService
+      .getIssueDailyDetailsByLogCode(this.issueLogCode)
+      .pipe(
+        catchError((err) => {
+          console.error('Error fetching issue details:', err);
+          return throwError(err);
+        })
+      )
+      .subscribe({
+        next: (response: ApiResponse<IssueDailyDetail>) => {
+          if (response && response.data) {
+            this.issueDailyDetails = response.data;
+            this.updateDataSource();
+          }
+        },
+        error: (err) => {
+          console.error('Error:', err);
+        },
+      });
+  }
+
+  updateDataSource(): void {
+    this.dataSource = computed(() => ({
+      currentPage: 1,
+      totalRecords: this.issueDailyDetails.length,
+      totalPages: Math.ceil(this.issueDailyDetails.length / this.pageSize),
+      data: this.issueDailyDetails,
+      message: '',
+      status: '',
+    }));
+  }
+
+  onClose(): void {
+    this.dialogRef.close();
+  }
+}
