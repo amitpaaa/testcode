@@ -1,50 +1,121 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { IssueDispositionDashboardComponent } from './issue-disposition-dashboard.component';
-import { IssueDetailservice } from '../services/issue-detail.service';
-import { MatDialog } from '@angular/material/dialog';
-import { ChangeDetectorRef } from '@angular/core';
-import { Router } from '@angular/router';
-import { DateAdapter } from '@angular/material/core';
-import { of } from 'rxjs';
+import { ReactiveFormsModule, FormGroup, FormControl } from '@angular/forms';
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { DailyIssueDetailsComponent } from './daily-issue-details.component';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { of, throwError } from 'rxjs';
+import { IssueDetailService } from 'path-to-issue-detail-service';
 
-describe('IssueDispositionDashboardComponent', () => {
-  let component: IssueDispositionDashboardComponent;
-  let fixture: ComponentFixture<IssueDispositionDashboardComponent>;
-  let issueDetailServiceSpy: jasmine.SpyObj<IssueDetailservice>;
+describe('DailyIssueDetailsComponent', () => {
+  let component: DailyIssueDetailsComponent;
+  let fixture: ComponentFixture<DailyIssueDetailsComponent>;
+  let mockDialogRef: jasmine.SpyObj<MatDialogRef<DailyIssueDetailsComponent>>;
+  let mockIssueDetailService: jasmine.SpyObj<IssueDetailService>;
 
   beforeEach(async () => {
-    const issueDetailServiceMock = jasmine.createSpyObj('IssueDetailservice', ['getIssueDetails']);
+    mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
+    mockIssueDetailService = jasmine.createSpyObj('IssueDetailService', ['getIssueDailyDetailsByLogCode']);
+
+    const mockDialogData = {
+      issueDetailForm: new FormGroup({
+        issueLogCode: new FormControl('IRL-10'),
+        contractName: new FormControl('Test Contract'),
+      }),
+    };
 
     await TestBed.configureTestingModule({
-      declarations: [IssueDispositionDashboardComponent],
+      declarations: [DailyIssueDetailsComponent],
+      imports: [
+        HttpClientTestingModule,
+        ReactiveFormsModule,
+      ],
       providers: [
-        { provide: IssueDetailservice, useValue: issueDetailServiceMock },
-        { provide: MatDialog, useValue: {} },
-        { provide: ChangeDetectorRef, useValue: { detectChanges: jasmine.createSpy() } },
-        { provide: Router, useValue: { navigate: jasmine.createSpy() } },
-        { provide: DateAdapter, useValue: { setLocale: jasmine.createSpy() } }
-      ]
+        { provide: MatDialogRef, useValue: mockDialogRef },
+        { provide: MAT_DIALOG_DATA, useValue: mockDialogData },
+        { provide: IssueDetailService, useValue: mockIssueDetailService },
+      ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(IssueDispositionDashboardComponent);
+    fixture = TestBed.createComponent(DailyIssueDetailsComponent);
     component = fixture.componentInstance;
-    issueDetailServiceSpy = TestBed.inject(IssueDetailservice) as jasmine.SpyObj<IssueDetailservice>;
-
     fixture.detectChanges();
   });
 
-  it('should create the component', () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize with default values', () => {
-    expect(component.pageSize).toBe(10);
-    expect(component.defaultSortBy).toBe('id');
-    expect(component.defaultSortDir).toBe('desc');
-    expect(component.dataSource()).toEqual(jasmine.objectContaining({
-      currentPage: 1,
-      totalRecords: 0,
-      totalPages: 0
+  it('should initialize with provided dialog data', () => {
+    expect(component.issueLogCode).toBe('IRL-10');
+    expect(component.contractName).toBe('Test Contract');
+  });
+
+  it('should close the dialog on onClose()', () => {
+    component.onClose();
+    expect(mockDialogRef.close).toHaveBeenCalled();
+  });
+
+  it('should call fetchIssueDetails on initialization', () => {
+    spyOn(component, 'fetchIssueDetails');
+    component.ngOnInit();
+    expect(component.fetchIssueDetails).toHaveBeenCalled();
+  });
+
+  it('should fetch issue details successfully and process only required fields', () => {
+    mockIssueDetailService.getIssueDailyDetailsByLogCode.and.returnValue(of(mockResponse));
+  
+    component.fetchIssueDetails();
+  
+    expect(mockIssueDetailService.getIssueDailyDetailsByLogCode).toHaveBeenCalledWith('IRL-10');
+    expect(component.issueDailyDetails).toEqual(mockResponse.data); // All data saved in issueDailyDetails
+  
+    const dataForDisplay = component.dataSource.currentValue.data.map(item => ({
+      asOfDate: item.asOfDate,
+      executionTimestamp: item.executionTimestamp,
+      errorCount: item.errorCount,
+      principalErrorBalance: item.principalErrorBalance,
     }));
+    expect(dataForDisplay).toEqual([
+      {
+        asOfDate: '2024-11-27T00:00:00Z',
+        executionTimestamp: '2024-11-26T15:30:00Z',
+        errorCount: 10,
+        principalErrorBalance: 1000.5,
+      },
+      {
+        asOfDate: '2024-11-26T00:00:00Z',
+        executionTimestamp: '2024-11-25T15:30:00Z',
+        errorCount: 5,
+        principalErrorBalance: 500.25,
+      },
+    ]);
+  });
+
+
+  it('should handle error during fetchIssueDetails', () => {
+    const error = new Error('Failed to fetch');
+    spyOn(console, 'error');
+    mockIssueDetailService.getIssueDailyDetailsByLogCode.and.returnValue(throwError(error));
+
+    component.fetchIssueDetails();
+
+    expect(mockIssueDetailService.getIssueDailyDetailsByLogCode).toHaveBeenCalledWith('IRL-10');
+    expect(console.error).toHaveBeenCalledWith('Error fetching issue details:', error);
+  });
+
+  it('should update dataSource correctly', () => {
+    component.issueDailyDetails = [
+      { id: 1, errorCount: 10 },
+      { id: 2, errorCount: 5 },
+    ];
+    component.pageSize = 1;
+    component.updateDataSource();
+
+    const dataSource = component.dataSource.currentValue;
+    expect(dataSource.totalRecords).toBe(2);
+    expect(dataSource.totalPages).toBe(2);
+    expect(dataSource.data).toEqual(component.issueDailyDetails);
   });
 });
