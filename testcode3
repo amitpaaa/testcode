@@ -7,6 +7,11 @@ import { Signal, computed } from '@angular/core';
 import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 
+@Component({
+  selector: 'app-daily-issue-details',
+  templateUrl: './daily-issue-details.component.html',
+  styleUrls: ['./daily-issue-details.component.css'],
+
 export class DailyIssueDetailsComponent implements OnInit {
   issueDetailForm: FormGroup;
   issueLogCode: string;
