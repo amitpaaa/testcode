@@ -1,79 +1,37 @@
-import { Component, Inject, OnInit } from '@angular/core';
-import { FormGroup } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { IssueDetailService } from 'path-to-issue-detail-service';
-import { ApiResponse, IssueDailyDetail, PagingResponse } from 'path-to-models';
-import { Signal, computed } from '@angular/core';
-import { catchError } from 'rxjs/operators';
-import { throwError } from 'rxjs';
 
-@Component({
-  selector: 'app-daily-issue-details',
-  templateUrl: './daily-issue-details.component.html',
-  styleUrls: ['./daily-issue-details.component.css'],
+    @Override
+    public APIResponse<Object> getIssueDispositionSummary(String asOfDate) {
+        // Validate the asOfDate
+        if (asOfDate == null || asOfDate.isEmpty()) {
+            return new APIResponse<>(null, "AsOfDate is required", HttpStatus.BAD_REQUEST);
+        }
 
-export class DailyIssueDetailsComponent implements OnInit {
-  issueDetailForm: FormGroup;
-  issueLogCode: string;
-  contractName: string;
-  issueDailyDetails: IssueDailyDetail[] = [];
-  dataSource: Signal<PagingResponse<IssueDailyDetail>>;
-  pageSize: number = 50;
+        // Fetch the data from the repository
+        List<ResolutionLogDetails> resolutionLogDetails = resolutionLogDetailsRepository.findByAsOfDate(asOfDate);
+        if (resolutionLogDetails.isEmpty()) {
+            return new APIResponse<>(null, "No data found for the given AsOfDate", HttpStatus.NOT_FOUND);
+        }
 
-  columnDefs = [
-    { name: 'As Of Date', id: 'asOfDate', width: 100, isActive: true, type: FieldType.Date, filterType: FilterType.Date },
-    { name: 'Process Date', id: 'executionTimestamp', width: 100, isActive: true, type: FieldType.Date, filterType: FilterType.Date },
-    { name: 'Error Count', id: 'errorCount', width: 100, isActive: true, type: FieldType.Number, filterType: FilterType.Number },
-    { name: 'Error Balance', id: 'principalErrorBalance', width: 100, isActive: true, type: FieldType.Number, filterType: FilterType.Number },
-  ];
+        // Map the data to ResolutionLogSummaryDto
+        List<ResolutionLogSummaryDto> resolutionLogSummaryDtos = mapToResolutionLogSummaryDto(resolutionLogDetails);
 
-  constructor(
-    @Inject(MAT_DIALOG_DATA) public data: { issueDetailForm: FormGroup },
-    public dialogRef: MatDialogRef<DailyIssueDetailsComponent>,
-    private issueDetailService: IssueDetailService
-  ) {
-    this.issueLogCode = data.issueDetailForm.get('issueLogCode')?.value;
-    this.contractName = data.issueDetailForm.get('contractName')?.value;
-  }
+        // Return the response
+        return new APIResponse<>(resolutionLogSummaryDtos, "Data retrieved successfully", HttpStatus.OK);
+    }
 
-  ngOnInit(): void {
-    this.fetchIssueDetails();
-  }
+    private List<ResolutionLogSummaryDto> mapToResolutionLogSummaryDto(List<ResolutionLogDetails> resolutionLogDetails) {
+        // Implement the logic to map ResolutionLogDetails to ResolutionLogSummaryDto
+        List<ResolutionLogSummaryDto> summaryDtos = new ArrayList<>();
 
-  fetchIssueDetails(): void {
-    this.issueDetailService
-      .getIssueDailyDetailsByLogCode(this.issueLogCode)
-      .pipe(
-        catchError((err) => {
-          console.error('Error fetching issue details:', err);
-          return throwError(err);
-        })
-      )
-      .subscribe({
-        next: (response: ApiResponse<IssueDailyDetail>) => {
-          if (response && response.data) {
-            this.issueDailyDetails = response.data;
-            this.updateDataSource();
-          }
-        },
-        error: (err) => {
-          console.error('Error:', err);
-        },
-      });
-  }
+        for (ResolutionLogDetails details : resolutionLogDetails) {
+            ResolutionLogSummaryDto dto = new ResolutionLogSummaryDto();
+            // Set the relevant fields of the DTO from ResolutionLogDetails
+            dto.setIssueLogCode(details.getIssueLogCode());
+            dto.setResolutionStatus(details.getResolutionStatus());
+            dto.setResolvedBy(details.getResolvedBy());
+            dto.setResolutionDate(details.getResolutionDate());
+            summaryDtos.add(dto);
+        }
 
-  updateDataSource(): void {
-    this.dataSource = computed(() => ({
-      currentPage: 1,
-      totalRecords: this.issueDailyDetails.length,
-      totalPages: Math.ceil(this.issueDailyDetails.length / this.pageSize),
-      data: this.issueDailyDetails,
-      message: '',
-      status: '',
-    }));
-  }
-
-  onClose(): void {
-    this.dialogRef.close();
-  }
-}
+        return summaryDtos;
+    }
