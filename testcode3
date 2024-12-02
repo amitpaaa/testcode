@@ -1,20 +1,31 @@
- ngOnInit(): void {
-    this.issueDetailForm = this.data.issueDetailForm;
-    this.issueLogCode = this.issueDetailForm.get('issueLogCode')?.value;
-    this.contractName = this.issueDetailForm.get('contractName')?.value;
+beforeEach(async () => {
+   await TestBed.configureTestingModule({
+       declarations: [IssueDispositionDashboardComponent, BasicFilterComponent],
+       imports: [
+           HttpClientTestingModule,
+           ReactiveFormsModule,
+           MaterialCommonModule,
+           NoopAnimationsModule,
+           MatIconTestingModule,
+       ],
+       providers: [
+           { provide: MatDialog, useValue: jasmine.createSpyObj('MatDialog', ['open']) },
+           { provide: ChangeDetectorRef, useValue: { detectChanges: jasmine.createSpy() } },
+           { provide: Router, useValue: { navigate: jasmine.createSpy() } },
+           { provide: DateAdapter, useValue: { setLocale: jasmine.createSpy() } },
+           { provide: IssueDetailService, useValue: jasmine.createSpyObj('IssueDetailService', ['getIssueDailyDetailsByLogCode']) },
+       ],
+   }).compileComponents();
 
-    this.issueDailyDetails = this.data.issueDetailForm.value.issueDailyDetails; 
-    this.updateDataSource();
-  }
+   fixture = TestBed.createComponent(IssueDispositionDashboardComponent);
+   const formBuilder = TestBed.inject(FormBuilder);
+   component = fixture.componentInstance;
+   component.basicFilter = TestBed.createComponent(BasicFilterComponent).componentInstance;
+   component.basicFilter.filterForm = formBuilder.group({
+       executionTimestamp: [null],
+       asofDate: [null],
+       contractName: [null],
+   });
 
-  updateDataSource(): void {
-    this.dataSource = {
-      currentPage: 1,
-      totalRecords: this.issueDailyDetails.length,
-      totalPages: Math.ceil(this.issueDailyDetails.length / this.pageSize),
-      data: this.issueDailyDetails,
-      message: '',
-      status: 'success'
-    };
-  }
-}
+   fixture.detectChanges();
+});
