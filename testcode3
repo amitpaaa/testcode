@@ -1,9 +1,20 @@
-openDialog(): void {
-    this.issueDetailService.getIssueDetails().subscribe((issueDetailForm) => {
-        this.dialog.open(DailyIssueDetailsComponent, {
-            data: { issueDetailForm },
-            height: '90%',
-            width: '50%',
-        });
-    });
+ ngOnInit(): void {
+    this.issueDetailForm = this.data.issueDetailForm;
+    this.issueLogCode = this.issueDetailForm.get('issueLogCode')?.value;
+    this.contractName = this.issueDetailForm.get('contractName')?.value;
+
+    this.issueDailyDetails = this.data.issueDetailForm.value.issueDailyDetails; 
+    this.updateDataSource();
+  }
+
+  updateDataSource(): void {
+    this.dataSource = {
+      currentPage: 1,
+      totalRecords: this.issueDailyDetails.length,
+      totalPages: Math.ceil(this.issueDailyDetails.length / this.pageSize),
+      data: this.issueDailyDetails,
+      message: '',
+      status: 'success'
+    };
+  }
 }
