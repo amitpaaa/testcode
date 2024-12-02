@@ -1,37 +1,9 @@
-
-    @Override
-    public APIResponse<Object> getIssueDispositionSummary(String asOfDate) {
-        // Validate the asOfDate
-        if (asOfDate == null || asOfDate.isEmpty()) {
-            return new APIResponse<>(null, "AsOfDate is required", HttpStatus.BAD_REQUEST);
-        }
-
-        // Fetch the data from the repository
-        List<ResolutionLogDetails> resolutionLogDetails = resolutionLogDetailsRepository.findByAsOfDate(asOfDate);
-        if (resolutionLogDetails.isEmpty()) {
-            return new APIResponse<>(null, "No data found for the given AsOfDate", HttpStatus.NOT_FOUND);
-        }
-
-        // Map the data to ResolutionLogSummaryDto
-        List<ResolutionLogSummaryDto> resolutionLogSummaryDtos = mapToResolutionLogSummaryDto(resolutionLogDetails);
-
-        // Return the response
-        return new APIResponse<>(resolutionLogSummaryDtos, "Data retrieved successfully", HttpStatus.OK);
-    }
-
-    private List<ResolutionLogSummaryDto> mapToResolutionLogSummaryDto(List<ResolutionLogDetails> resolutionLogDetails) {
-        // Implement the logic to map ResolutionLogDetails to ResolutionLogSummaryDto
-        List<ResolutionLogSummaryDto> summaryDtos = new ArrayList<>();
-
-        for (ResolutionLogDetails details : resolutionLogDetails) {
-            ResolutionLogSummaryDto dto = new ResolutionLogSummaryDto();
-            // Set the relevant fields of the DTO from ResolutionLogDetails
-            dto.setIssueLogCode(details.getIssueLogCode());
-            dto.setResolutionStatus(details.getResolutionStatus());
-            dto.setResolvedBy(details.getResolvedBy());
-            dto.setResolutionDate(details.getResolutionDate());
-            summaryDtos.add(dto);
-        }
-
-        return summaryDtos;
-    }
+openDialog(): void {
+    this.issueDetailService.getIssueDetails().subscribe((issueDetailForm) => {
+        this.dialog.open(DailyIssueDetailsComponent, {
+            data: { issueDetailForm },
+            height: '90%',
+            width: '50%',
+        });
+    });
+}
