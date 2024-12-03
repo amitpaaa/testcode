@@ -1,67 +1,21 @@
-describe('IssueDetailComponent', () => {
-  let component: IssueDetailComponent;
-  let fixture: ComponentFixture<IssueDetailComponent>;
-  let mockIssueDetailService: jasmine.SpyObj<IssueDetailService>;
-  let mockMatDialog: jasmine.SpyObj<MatDialog>;
+ forkJoin({
+      issueDetail: this.issueDetailService.getIssueDetails(this.issueLogCode),
+      issueDailyDetails: this.issueDetailService.getIssueDailyDetailsByLogCode(this.issueLogCode),
+    }).subscribe({
+      next: ({ issueDetail, issueDailyDetails }) => {
+        if (issueDetail.data) {
+          // Process Issue Details
+          this.issueDetail = issueDetail.data;
+          this.progressNotes = issueDetail.data.resolutionLogComments;
 
-  beforeEach(async () => {
-    mockIssueDetailService = jasmine.createSpyObj('IssueDetailService', ['getIssueDailyDetailsByLogCode']);
-    mockMatDialog = jasmine.createSpyObj('MatDialog', ['open']);
+          // Patch and disable the form in the child component
+          this.issueDetailCmp.issueDetailForm.patchValue(this.issueDetail);
+          this.issueDetailCmp.issueDetailForm.disable();
 
-    await TestBed.configureTestingModule({
-      declarations: [IssueDetailComponent],
-      imports: [
-        HttpClientTestingModule,
-        ReactiveFormsModule,
-        MaterialCommonModule,
-        NoopAnimationsModule,
-        MatIconTestingModule,
-      ],
-      providers: [
-        FormBuilder,
-        { provide: IssueDetailService, useValue: mockIssueDetailService },
-        { provide: MatDialog, useValue: mockMatDialog },
-      ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
-    }).compileComponents();
+          // Enable/disable buttons
+          this.isSaveEnabled = false;
+          this.isCancelEnabled = false;
+          this.isEditEnabled = true;
 
-    fixture = TestBed.createComponent(IssueDetailComponent);
-    component = fixture.componentInstance;
-    component.issueDetailForm = new FormBuilder().group({
-      issueLogCode: ['sampleCode'],
-    });
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('should open dialog with fetched data when getIssueDailyDetailsByLogCode succeeds', () => {
-    const mockResponse = { data: [{ id: 1, detail: 'test detail' }] };
-    mockIssueDetailService.getIssueDailyDetailsByLogCode.and.returnValue(of(mockResponse));
-
-    component.openDialog();
-
-    expect(mockIssueDetailService.getIssueDailyDetailsByLogCode).toHaveBeenCalledWith('sampleCode');
-    expect(mockMatDialog.open).toHaveBeenCalledWith(DailyIssueDetailsComponent, {
-      data: {
-        issueDetailForm: component.issueDetailForm,
-        issueDailyDetails: mockResponse.data,
-        height: '90%',
-        width: '50%',
-      },
-    });
-  });
-
-  it('should log error when getIssueDailyDetailsByLogCode fails', () => {
-    const consoleSpy = spyOn(console, 'error');
-    mockIssueDetailService.getIssueDailyDetailsByLogCode.and.returnValue(throwError(() => new Error('Network Error')));
-
-    component.openDialog();
-
-    expect(mockIssueDetailService.getIssueDailyDetailsByLogCode).toHaveBeenCalledWith('sampleCode');
-    expect(mockMatDialog.open).not.toHaveBeenCalled();
-    expect(consoleSpy).toHaveBeenCalledWith('Error fetching issue details:', jasmine.any(Error));
-  });
-});
+          // Pass issueDailyDetails to the child component
+          this.issueDetailCmp.issueDailyDetails = issueDailyDetails.data || [];
