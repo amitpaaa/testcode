@@ -1,45 +1,35 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ReactiveFormsModule, FormGroup, FormControl } from '@angular/forms';
-import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { DailyIssueDetailsComponent } from './daily-issue-details.component';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { of, throwError } from 'rxjs';
-import { IssueDetailService } from 'path-to-issue-detail-service';
-
-describe('DailyIssueDetailsComponent', () => {
-  let component: DailyIssueDetailsComponent;
-  let fixture: ComponentFixture<DailyIssueDetailsComponent>;
-  let mockDialogRef: jasmine.SpyObj<MatDialogRef<DailyIssueDetailsComponent>>;
+describe('IssueDetailComponent', () => {
+  let component: IssueDetailComponent;
+  let fixture: ComponentFixture<IssueDetailComponent>;
   let mockIssueDetailService: jasmine.SpyObj<IssueDetailService>;
+  let mockMatDialog: jasmine.SpyObj<MatDialog>;
 
   beforeEach(async () => {
-    mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
     mockIssueDetailService = jasmine.createSpyObj('IssueDetailService', ['getIssueDailyDetailsByLogCode']);
-
-    const mockDialogData = {
-      issueDetailForm: new FormGroup({
-        issueLogCode: new FormControl('IRL-10'),
-        contractName: new FormControl('Test Contract'),
-      }),
-    };
+    mockMatDialog = jasmine.createSpyObj('MatDialog', ['open']);
 
     await TestBed.configureTestingModule({
-      declarations: [DailyIssueDetailsComponent],
+      declarations: [IssueDetailComponent],
       imports: [
         HttpClientTestingModule,
         ReactiveFormsModule,
+        MaterialCommonModule,
+        NoopAnimationsModule,
+        MatIconTestingModule,
       ],
       providers: [
-        { provide: MatDialogRef, useValue: mockDialogRef },
-        { provide: MAT_DIALOG_DATA, useValue: mockDialogData },
+        FormBuilder,
         { provide: IssueDetailService, useValue: mockIssueDetailService },
+        { provide: MatDialog, useValue: mockMatDialog },
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(DailyIssueDetailsComponent);
+    fixture = TestBed.createComponent(IssueDetailComponent);
     component = fixture.componentInstance;
+    component.issueDetailForm = new FormBuilder().group({
+      issueLogCode: ['sampleCode'],
+    });
     fixture.detectChanges();
   });
 
@@ -47,75 +37,31 @@ describe('DailyIssueDetailsComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize with provided dialog data', () => {
-    expect(component.issueLogCode).toBe('IRL-10');
-    expect(component.contractName).toBe('Test Contract');
-  });
-
-  it('should close the dialog on onClose()', () => {
-    component.onClose();
-    expect(mockDialogRef.close).toHaveBeenCalled();
-  });
-
-  it('should call fetchIssueDetails on initialization', () => {
-    spyOn(component, 'fetchIssueDetails');
-    component.ngOnInit();
-    expect(component.fetchIssueDetails).toHaveBeenCalled();
-  });
-
-  it('should fetch issue details successfully and process only required fields', () => {
+  it('should open dialog with fetched data when getIssueDailyDetailsByLogCode succeeds', () => {
+    const mockResponse = { data: [{ id: 1, detail: 'test detail' }] };
     mockIssueDetailService.getIssueDailyDetailsByLogCode.and.returnValue(of(mockResponse));
-  
-    component.fetchIssueDetails();
-  
-    expect(mockIssueDetailService.getIssueDailyDetailsByLogCode).toHaveBeenCalledWith('IRL-10');
-    expect(component.issueDailyDetails).toEqual(mockResponse.data); // All data saved in issueDailyDetails
-  
-    const dataForDisplay = component.dataSource.currentValue.data.map(item => ({
-      asOfDate: item.asOfDate,
-      executionTimestamp: item.executionTimestamp,
-      errorCount: item.errorCount,
-      principalErrorBalance: item.principalErrorBalance,
-    }));
-    expect(dataForDisplay).toEqual([
-      {
-        asOfDate: '2024-11-27T00:00:00Z',
-        executionTimestamp: '2024-11-26T15:30:00Z',
-        errorCount: 10,
-        principalErrorBalance: 1000.5,
+
+    component.openDialog();
+
+    expect(mockIssueDetailService.getIssueDailyDetailsByLogCode).toHaveBeenCalledWith('sampleCode');
+    expect(mockMatDialog.open).toHaveBeenCalledWith(DailyIssueDetailsComponent, {
+      data: {
+        issueDetailForm: component.issueDetailForm,
+        issueDailyDetails: mockResponse.data,
+        height: '90%',
+        width: '50%',
       },
-      {
-        asOfDate: '2024-11-26T00:00:00Z',
-        executionTimestamp: '2024-11-25T15:30:00Z',
-        errorCount: 5,
-        principalErrorBalance: 500.25,
-      },
-    ]);
+    });
   });
 
+  it('should log error when getIssueDailyDetailsByLogCode fails', () => {
+    const consoleSpy = spyOn(console, 'error');
+    mockIssueDetailService.getIssueDailyDetailsByLogCode.and.returnValue(throwError(() => new Error('Network Error')));
 
-  it('should handle error during fetchIssueDetails', () => {
-    const error = new Error('Failed to fetch');
-    spyOn(console, 'error');
-    mockIssueDetailService.getIssueDailyDetailsByLogCode.and.returnValue(throwError(error));
+    component.openDialog();
 
-    component.fetchIssueDetails();
-
-    expect(mockIssueDetailService.getIssueDailyDetailsByLogCode).toHaveBeenCalledWith('IRL-10');
-    expect(console.error).toHaveBeenCalledWith('Error fetching issue details:', error);
-  });
-
-  it('should update dataSource correctly', () => {
-    component.issueDailyDetails = [
-      { id: 1, errorCount: 10 },
-      { id: 2, errorCount: 5 },
-    ];
-    component.pageSize = 1;
-    component.updateDataSource();
-
-    const dataSource = component.dataSource.currentValue;
-    expect(dataSource.totalRecords).toBe(2);
-    expect(dataSource.totalPages).toBe(2);
-    expect(dataSource.data).toEqual(component.issueDailyDetails);
+    expect(mockIssueDetailService.getIssueDailyDetailsByLogCode).toHaveBeenCalledWith('sampleCode');
+    expect(mockMatDialog.open).not.toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith('Error fetching issue details:', jasmine.any(Error));
   });
 });
