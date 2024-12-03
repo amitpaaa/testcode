@@ -1,31 +1,23 @@
-beforeEach(async () => {
-   await TestBed.configureTestingModule({
-       declarations: [IssueDispositionDashboardComponent, BasicFilterComponent],
-       imports: [
-           HttpClientTestingModule,
-           ReactiveFormsModule,
-           MaterialCommonModule,
-           NoopAnimationsModule,
-           MatIconTestingModule,
-       ],
-       providers: [
-           { provide: MatDialog, useValue: jasmine.createSpyObj('MatDialog', ['open']) },
-           { provide: ChangeDetectorRef, useValue: { detectChanges: jasmine.createSpy() } },
-           { provide: Router, useValue: { navigate: jasmine.createSpy() } },
-           { provide: DateAdapter, useValue: { setLocale: jasmine.createSpy() } },
-           { provide: IssueDetailService, useValue: jasmine.createSpyObj('IssueDetailService', ['getIssueDailyDetailsByLogCode']) },
-       ],
-   }).compileComponents();
+openDialog(): void {
+  const issueLogCode = this.issueDetailForm.get('issueLogCode')?.value; // Fetch the value from your form
 
-   fixture = TestBed.createComponent(IssueDispositionDashboardComponent);
-   const formBuilder = TestBed.inject(FormBuilder);
-   component = fixture.componentInstance;
-   component.basicFilter = TestBed.createComponent(BasicFilterComponent).componentInstance;
-   component.basicFilter.filterForm = formBuilder.group({
-       executionTimestamp: [null],
-       asofDate: [null],
-       contractName: [null],
-   });
-
-   fixture.detectChanges();
-});
+  // Fetch the issue details using the service
+  this.issueDetailService.getIssueDailyDetailsByLogCode(issueLogCode).subscribe({
+    next: (response: ApiResponse<IssueDailyDetail[]>) => {
+      if (response && response.data) {
+        // Open the dialog and pass the fetched data
+        this.dialog.open(DailyIssueDetailsComponent, {
+          data: {
+            issueDetailForm: this.issueDetailForm,
+            issueDailyDetails: response.data, // Pass fetched details here
+          },
+          height: '90%',
+          width: '50%',
+        });
+      }
+    },
+    error: (err) => {
+      console.error('Error fetching issue details:', err);
+    },
+  });
+}
