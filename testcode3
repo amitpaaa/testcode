@@ -1,23 +1,8 @@
-openDialog(): void {
-  const issueLogCode = this.issueDetailForm.get('issueLogCode')?.value; // Fetch the value from your form
-
-  // Fetch the issue details using the service
-  this.issueDetailService.getIssueDailyDetailsByLogCode(issueLogCode).subscribe({
-    next: (response: ApiResponse<IssueDailyDetail[]>) => {
-      if (response && response.data) {
-        // Open the dialog and pass the fetched data
-        this.dialog.open(DailyIssueDetailsComponent, {
-          data: {
-            issueDetailForm: this.issueDetailForm,
-            issueDailyDetails: response.data, // Pass fetched details here
-          },
-          height: '90%',
-          width: '50%',
-        });
-      }
-    },
-    error: (err) => {
-      console.error('Error fetching issue details:', err);
-    },
-  });
-}
+ this.dataSource = {
+    currentPage: 1,
+    totalRecords: issueDailyDetails.length,
+    totalPages: Math.ceil(issueDailyDetails.length / this.pageSize),
+    data: issueDailyDetails,
+    message: '',
+    status: 'success',
+  };
