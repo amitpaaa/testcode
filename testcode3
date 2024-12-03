@@ -1,8 +1,27 @@
- this.dataSource = {
-    currentPage: 1,
-    totalRecords: issueDailyDetails.length,
-    totalPages: Math.ceil(issueDailyDetails.length / this.pageSize),
-    data: issueDailyDetails,
-    message: '',
-    status: 'success',
-  };
+it('should open dialog with fetched data when getIssueDailyDetailsByLogCode succeeds', () => {
+    const mockResponse = { data: [{ id: 1, detail: 'test detail' }] };
+    mockIssueDetailService.getIssueDailyDetailsByLogCode.and.returnValue(of(mockResponse));
+
+    component.openDialog();
+
+    expect(mockIssueDetailService.getIssueDailyDetailsByLogCode).toHaveBeenCalledWith('sampleCode');
+    expect(mockMatDialog.open).toHaveBeenCalledWith(DailyIssueDetailsComponent, {
+      data: {
+        issueDetailForm: component.issueDetailForm,
+        issueDailyDetails: mockResponse.data,
+        height: '90%',
+        width: '50%',
+      },
+    });
+  });
+
+  it('should log error when getIssueDailyDetailsByLogCode fails', () => {
+    const consoleSpy = spyOn(console, 'error');
+    mockIssueDetailService.getIssueDailyDetailsByLogCode.and.returnValue(throwError(() => new Error('Network Error')));
+
+    component.openDialog();
+
+    expect(mockIssueDetailService.getIssueDailyDetailsByLogCode).toHaveBeenCalledWith('sampleCode');
+    expect(mockMatDialog.open).not.toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith('Error fetching issue details:', jasmine.any(Error));
+  });
