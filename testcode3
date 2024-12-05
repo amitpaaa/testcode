@@ -1,27 +1,16 @@
-it('should open dialog with fetched data when getIssueDailyDetailsByLogCode succeeds', () => {
-    const mockResponse = { data: [{ id: 1, detail: 'test detail' }] };
-    mockIssueDetailService.getIssueDailyDetailsByLogCode.and.returnValue(of(mockResponse));
+it('should open dialog with issueDailyDetails and issueDetailForm', () => {
+  const dialogSpy = spyOn(component.dialog, 'open').and.callThrough();
+  component.issueDailyDetails = mockIssueDailyDetails;
+  component.issueDetailForm = mockIssueDetailForm;
 
-    component.openDialog();
+  component.openDialog();
 
-    expect(mockIssueDetailService.getIssueDailyDetailsByLogCode).toHaveBeenCalledWith('sampleCode');
-    expect(mockMatDialog.open).toHaveBeenCalledWith(DailyIssueDetailsComponent, {
-      data: {
-        issueDetailForm: component.issueDetailForm,
-        issueDailyDetails: mockResponse.data,
-        height: '90%',
-        width: '50%',
-      },
-    });
+  expect(dialogSpy).toHaveBeenCalledWith(DailyIssueDetailscomponent, {
+    data: {
+      issueDetailForm: mockIssueDetailForm,
+      issueDailyDetails: mockIssueDailyDetails,
+    },
+    height: '90%',
+    width: '600px',
   });
-
-  it('should log error when getIssueDailyDetailsByLogCode fails', () => {
-    const consoleSpy = spyOn(console, 'error');
-    mockIssueDetailService.getIssueDailyDetailsByLogCode.and.returnValue(throwError(() => new Error('Network Error')));
-
-    component.openDialog();
-
-    expect(mockIssueDetailService.getIssueDailyDetailsByLogCode).toHaveBeenCalledWith('sampleCode');
-    expect(mockMatDialog.open).not.toHaveBeenCalled();
-    expect(consoleSpy).toHaveBeenCalledWith('Error fetching issue details:', jasmine.any(Error));
-  });
+});
